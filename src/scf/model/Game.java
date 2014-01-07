@@ -1,5 +1,7 @@
 package scf.model;
 
+import java.util.LinkedList;
+
 /**
  *
  * @author paddya
@@ -50,13 +52,13 @@ public class Game {
         return null;
     }
     
-    private Player scanColumns(Player[][] board)
-    {
-        Player previousPlayer = null;
-        
+    private LinkedList<Player> scanColumns(Player[][] board)
+    { 
+        LinkedList<Player> winners = new LinkedList<>();
         int sameInRow = 0;
         
         for (int i = 0; i < Board.NUM_COLUMNS; i++) {
+            Player previousPlayer = null;
             for (int k = 0; k < Board.NUM_ROWS; k++) {
                 Player currentPlayer = board[i][k];
                 
@@ -65,7 +67,7 @@ public class Game {
                         sameInRow++;
                         
                         if (sameInRow == 4) {
-                            return currentPlayer;
+                            winners.add(currentPlayer);
                         }
                         
                     } else {
@@ -79,17 +81,17 @@ public class Game {
             }
         }
         
-        return null;
+        return winners;
         
     }
     
-    private Player scanRows(Player[][] board)
+    private LinkedList<Player>  scanRows(Player[][] board)
     {
-        Player previousPlayer = null;
-        
+        LinkedList<Player> winners = new LinkedList<>();
         int sameInRow = 0;
         
         for (int k = 0; k < Board.NUM_ROWS; k++) {
+            Player previousPlayer = null;
             for (int i = 0; i < Board.NUM_COLUMNS; i++) {    
                 Player currentPlayer = board[i][k];
                 
@@ -98,7 +100,7 @@ public class Game {
                         sameInRow++;
                         
                         if (sameInRow == 4) {
-                            return currentPlayer;
+                            winners.add(currentPlayer);
                         }
                         
                     } else {
@@ -112,7 +114,7 @@ public class Game {
             }
         }
         
-        return null;
+        return winners;
         
     }
 }

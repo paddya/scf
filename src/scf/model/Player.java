@@ -6,6 +6,18 @@ package scf.model;
  */
 public class Player {
     private String name;
+    
+    private boolean token;
+
+    public boolean hasToken()
+    {
+        return token;
+    }
+
+    public void setToken(boolean hasToken)
+    {
+        this.token = hasToken;
+    }
 
     public String getName() {
         return name;
