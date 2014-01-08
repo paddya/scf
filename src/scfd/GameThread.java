@@ -62,7 +62,7 @@ public class GameThread extends Thread
 				}
 			}
 		} else {
-			// throw new YouStupidException
+			// Nonsensical playerID
 			cmd = null;
 		}
 		
@@ -79,6 +79,8 @@ public class GameThread extends Thread
 		this.opponentQueueIn = new ConcurrentLinkedQueue<>();
 		this.opponentQueueOut = new ConcurrentLinkedQueue<>();
 		this.mutexIn = new Object();
+                this.challengerMutexOut = new Object();
+                this.opponentMutexOut = new Object();
 	}
 	
 	
@@ -103,6 +105,7 @@ public class GameThread extends Thread
 			
 			if (c != null) {
 				System.out.println("new command from challenger");
+                                handleCommand(c, this.challengerID);
 			}
 			
 			
@@ -111,6 +114,7 @@ public class GameThread extends Thread
 			
 			if (o != null) {
 				System.out.println("new command from opponent");
+                                handleCommand(o, this.opponentID);
 			}
 			
 			
@@ -124,6 +128,14 @@ public class GameThread extends Thread
 			}
 		}
 	}
+        
+        
+        
+        private Command handleCommand(Command cmd, String playerID)
+        {
+            // To Do: Implement handler
+            return null;
+        }
 	
 	
 	
@@ -146,5 +158,9 @@ public class GameThread extends Thread
 		sleep(3000);
 		
 		gt.enqueue(new Command(), "patrick");
+		
+		Command cmd = gt.blockinglyDequeue("markus");
+		
+		if (cmd != null) System.out.println("new message for markus");
 	}
 }
