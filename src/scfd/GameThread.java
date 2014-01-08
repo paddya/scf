@@ -12,25 +12,61 @@ public class GameThread extends Thread
 	private ConcurrentLinkedQueue<Command> challengerQueueOut;
 	private ConcurrentLinkedQueue<Command> opponentQueueIn;
 	private ConcurrentLinkedQueue<Command> opponentQueueOut;
-	private Object mutex;
+	private Object mutexIn;
+	private Object challengerMutexOut;
+	private Object opponentMutexOut;
 	
 	
 	
 	public void enqueue(Command cmd, String playerID)
 	{
 		if (playerID.equals(challengerID)) {
-			synchronized (this.mutex) {
+			synchronized (this.mutexIn) {
 				this.challengerQueueIn.add(cmd);
-				this.mutex.notifyAll();
+				this.mutexIn.notifyAll();
 			}
 		} else if (playerID.equals(opponentID)) {
-			synchronized (this.mutex) {
+			synchronized (this.mutexIn) {
 				this.opponentQueueIn.add(cmd);
-				this.mutex.notifyAll();
+				this.mutexIn.notifyAll();
 			}
 		} else {
 			// throw new YouStupidException
 		}
+	}
+	
+	
+	
+	public Command blockinglyDequeue(String playerID)
+	{
+		Command cmd;
+		
+		if (playerID.equals(challengerID)) {
+			while ((cmd = this.challengerQueueOut.poll()) == null) {
+				try {
+					synchronized (this.challengerMutexOut) {
+						this.challengerMutexOut.wait();
+					}
+				} catch (InterruptedException e) {
+					System.out.println("Interrupted, ya");
+				}
+			}
+		} else if (playerID.equals(opponentID)) {
+			while ((cmd = this.opponentQueueOut.poll()) == null) {
+				try {
+					synchronized (this.opponentMutexOut) {
+						this.opponentMutexOut.wait();
+					}
+				} catch (InterruptedException e) {
+					System.out.println("Interrupted, ya");
+				}
+			}
+		} else {
+			// throw new YouStupidException
+			cmd = null;
+		}
+		
+		return cmd;
 	}
 	
 	
@@ -42,7 +78,7 @@ public class GameThread extends Thread
 		this.challengerQueueOut = new ConcurrentLinkedQueue<>();
 		this.opponentQueueIn = new ConcurrentLinkedQueue<>();
 		this.opponentQueueOut = new ConcurrentLinkedQueue<>();
-		this.mutex = new Object();
+		this.mutexIn = new Object();
 	}
 	
 	
@@ -80,8 +116,8 @@ public class GameThread extends Thread
 			
 			// Wait for next command
 			try {
-				synchronized (this.mutex) {
-					this.mutex.wait();
+				synchronized (this.mutexIn) {
+					this.mutexIn.wait();
 				}
 			} catch (InterruptedException e) {
 				System.out.println("Interrupted, ya");
