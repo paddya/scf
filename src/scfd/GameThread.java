@@ -1,12 +1,6 @@
-import java.io.*;
-import java.net.*;
-import java.util.Date;
-import java.text.*;
+package scfd;
+
 import java.util.concurrent.*;
-
-
-
-
 
 public class GameThread extends Thread
 {

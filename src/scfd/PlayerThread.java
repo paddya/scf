@@ -1,11 +1,9 @@
+package scfd;
+
 import java.io.*;
 import java.net.*;
 import java.util.Date;
 import java.text.*;
-
-
-
-
 
 public class PlayerThread implements Runnable
 {
@@ -30,7 +28,7 @@ public class PlayerThread implements Runnable
 			// Command serverHello = Parser.getInstance().parse(this.in.readLine());
 			// this.user = serverHello.getUser();
 			this.playerID = this.in.readLine();
-			System.out.println("Client chose name " + this.user);
+			System.out.println("Client chose name " + this.playerID);
 		} catch (IOException e) {
 			System.out.println("Gnah");
 		}
