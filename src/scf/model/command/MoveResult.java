@@ -15,10 +15,4 @@ public class MoveResult extends Command
         protocolRepresentation = NAME + " "; // + args and/or something
     }
 
-    @Override
-    public void execute()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
 }

@@ -12,8 +12,6 @@ public abstract class Command
     private Player player;
     protected String protocolRepresentation = "";
 
-    public abstract void execute();
-
     public void setPlayer(Player player)
     {
         this.player = player;

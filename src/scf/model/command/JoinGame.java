@@ -14,10 +14,4 @@ public class JoinGame extends Command
         protocolRepresentation = NAME + " "; // + ...
     }
 
-    @Override
-    public void execute()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
 }

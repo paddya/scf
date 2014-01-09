@@ -14,11 +14,4 @@ import scf.model.command.Command;
  */
 public abstract class Error extends Command
 {
-
-    @Override
-    public void execute()
-    {
-        // Nothing to be done.
-    }
-    
 }

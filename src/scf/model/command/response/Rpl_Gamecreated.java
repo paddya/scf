@@ -5,7 +5,7 @@ package scf.model.command.response;
  *
  * @author Ferdinand Sauer
  */
-public class Rpl_Gamecreated extends Response
+public class Rpl_Gamecreated extends Reply
 {
 
     public Rpl_Gamecreated()
