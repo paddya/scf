@@ -8,9 +8,28 @@ public class PlaceDisc extends Command
 {
 
     public static final String NAME = "PLACEDISC";
-
-    public PlaceDisc()
+    
+    private Integer column;
+    
+    public PlaceDisc(Integer column)
     {
-        protocolRepresentation = NAME + " "; // + ...
+        this.column = column;
+        protocolRepresentation = String.format("%s %d", NAME, column);
     }
+
+
+
+    public Integer getColumn()
+    {
+        return column;
+    }
+
+
+
+    public void setColumn(Integer column)
+    {
+        this.column = column;
+    }
+    
+    
 }

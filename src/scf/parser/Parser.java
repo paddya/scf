@@ -33,7 +33,9 @@ import scf.model.command.response.Rpl_Reconnected;
 import scf.model.command.response.Rpl_Serverhello;
 import scf.parser.exception.ParserCommandNotFoundException;
 import scf.parser.exception.ParserException;
+import scf.parser.exception.ParserIllegalColumnException;
 import scf.parser.exception.ParserIllegalPlayerNameException;
+import scf.parser.exception.ParserInvalidParamsException;
 
 /**
  *
@@ -69,7 +71,9 @@ public class Parser
                     } else {
                         throw new ParserIllegalPlayerNameException("PlayerID is either too long or to short.");
                     }
-                }
+                } else {
+                    throw new ParserInvalidParamsException("ClientHello requires exactly one parameter.");
+                } 
 				
 				break;
 
@@ -78,7 +82,12 @@ public class Parser
 				break;
 
 			case JoinGame.NAME:
-				cmd = new JoinGame(message[1]);
+                if (message.length == 2) {
+                    cmd = new JoinGame(message[1]);
+                } else {
+                    throw new ParserInvalidParamsException("JoinGame requires exactly one parameter.");
+                }
+				
 				break;
 
 			case CreateGame.NAME:
@@ -86,7 +95,18 @@ public class Parser
 				break;
 
 			case PlaceDisc.NAME:
-				cmd = new PlaceDisc();
+                if (message.length == 2) {
+                    Integer column = Integer.parseInt(message[1]);
+                    
+                    if (column > 0 && column <= 6) {
+                        cmd = new PlaceDisc(column);
+                    } else {
+                        throw new ParserIllegalColumnException("The column must be an integer value between 0 and 6.");
+                    }
+                } else {
+                    throw new ParserInvalidParamsException("PlaceDisc requires exactly one parameter.");
+                }
+				
 				break;
 
 			case LeaveGame.NAME:
@@ -102,6 +122,8 @@ public class Parser
                     } else {
                         throw new ParserIllegalPlayerNameException("PlayerID is either too short or too long.");
                     }
+                } else {
+                    throw new ParserInvalidParamsException("Reconnect requires exactly one parameter.");
                 }
 				
 				break;
