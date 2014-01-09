@@ -31,6 +31,7 @@ import scf.model.command.response.Rpl_Joinedgame;
 import scf.model.command.response.Rpl_Leftgame;
 import scf.model.command.response.Rpl_Reconnected;
 import scf.model.command.response.Rpl_Serverhello;
+import scf.parser.exception.ParserCommandNotFoundException;
 import scf.parser.exception.ParserException;
 import scf.parser.exception.ParserIllegalPlayerNameException;
 
@@ -68,8 +69,6 @@ public class Parser
                     } else {
                         throw new ParserIllegalPlayerNameException("PlayerID is either too long or to short.");
                     }
-                    
-                    
                 }
 				
 				break;
@@ -103,8 +102,6 @@ public class Parser
                     } else {
                         throw new ParserIllegalPlayerNameException("PlayerID is either too short or too long.");
                     }
-                    
-                    
                 }
 				
 				break;
@@ -156,8 +153,7 @@ public class Parser
 
 			// No command could be parsed
 			default:
-				cmd = null; // TODO Best solution?
-				break;
+				throw new ParserCommandNotFoundException("Command does not exist.");
 		}
 
 		return cmd;
