@@ -5,10 +5,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.io.*;
 import java.net.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
 import scf.model.command.Reconnect;
 import scf.parser.Parser;
+import scf.parser.exception.ParserException;
 
 
 
@@ -19,7 +22,8 @@ public class Server
     {
         final ExecutorService pool;
         final ServerSocket serverSocket;
-        int port = 13370;
+        int port = 13370 + (int)(Math.random() * 10);
+        System.out.println("Server port: " + port);
         Thread serverThread;
 
 
@@ -68,6 +72,7 @@ class Listener implements Runnable
 
 
 
+    @Override
     public void run()
     {
         try {
@@ -77,21 +82,45 @@ class Listener implements Runnable
                 System.out.println("New client");
                 
                 
-                // Initialize
+                // Either create a new thread (CLIENTHELLO) or unfreeze an old one (RECONNECT)
                 BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                String s = br.readLine();
-                Command cmd = Parser.parse(s);
+                    String s = br.readLine();
+                Command cmd;
                 
                 try {
+                    cmd = Parser.parse(s);
+                } catch (ParserException ex) {
+                    System.out.println("Parse error on first message. Client is not even trying.");
+                    continue;
+                }
+                
+                try {
+                    // CLIENTHELLO
                     ClientHello clientHello = (ClientHello) cmd;
                     PlayerThread playerThread = new PlayerThread(clientSocket, clientHello.getPlayerID());
+                    
+                    
+                    // Save playerThread in PlayerThreadMap for future reconnects
+                    PlayerThreadMap.getInstance().put(clientHello.getPlayerID(), playerThread);
+                    
+                    // Run playerThread
                     pool.execute(playerThread);
                 } catch (ClassCastException e) {
                     try {
+                        // RECONNECT
                         Reconnect reconnect = (Reconnect) cmd;
+                        PlayerThread playerThread;
                         
+                        
+                        // Retrieve old playerThread for this player
+                        playerThread = PlayerThreadMap.getInstance().get(reconnect.getPlayerID());
+                        
+                        
+                        // Rerun this playerThread
+                        playerThread.setSocket(clientSocket);
                     } catch (ClassCastException e2) {
                         System.out.println("First message from client to server MUST be CLIENTHELLO or RECONNECT");
+                        continue;
                     }
                 }
             }
