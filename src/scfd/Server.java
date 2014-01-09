@@ -91,6 +91,7 @@ class Listener implements Runnable
                     cmd = Parser.parse(s);
                 } catch (ParserException ex) {
                     System.out.println("Parse error on first message. Client is not even trying.");
+                    clientSocket.close();
                     continue;
                 }
                 
