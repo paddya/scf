@@ -58,8 +58,6 @@ public class PlayerThread extends Thread
             // Read loop
             String line;
             while ((line = in.readLine()) != null) {
-                // Command cmd = Parser.getInstance().parse(line);
-                // this.out.println(cmd.toString());
                 System.out.println(this.playerID + " said: " + line);
             }
 

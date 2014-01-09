@@ -16,7 +16,7 @@ public class GameMap extends ConcurrentHashMap<String, GameThread>
     
     
     
-    private GameMap() 
+    private GameMap()
     {
         // Can not access constructor from outside
     }
