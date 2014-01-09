@@ -4,7 +4,7 @@ package scf.model.command.response;
  *
  * @author Ferdinand Sauer
  */
-public class Rpl_Serverhello extends Response
+public class Rpl_Serverhello extends Reply
 {
 
     public Rpl_Serverhello()

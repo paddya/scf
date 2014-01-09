@@ -4,26 +4,29 @@ package scf.model;
  *
  * @author paddya
  */
-public class Player {
-    private String name;
-    
-    private boolean token;
+public class Player
+{
 
-    public boolean hasToken()
-    {
-        return token;
-    }
+	private String name;
+	private boolean token;
 
-    public void setToken(boolean hasToken)
-    {
-        this.token = hasToken;
-    }
+	public boolean hasToken()
+	{
+		return token;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public void setToken(boolean hasToken)
+	{
+		this.token = hasToken;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public String getName()
+	{
+		return name;
+	}
+
+	public void setName(String name)
+	{
+		this.name = name;
+	}
 }

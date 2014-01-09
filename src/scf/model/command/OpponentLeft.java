@@ -13,12 +13,6 @@ public class OpponentLeft extends Command
     public OpponentLeft()
     {
         protocolRepresentation = NAME + " "; // + args and/or something
-    }
-
-    @Override
-    public void execute()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+	}
 
 }

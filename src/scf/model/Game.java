@@ -49,13 +49,13 @@ public class Game
     {
         if (getBoard() != null) {
             Player[][] board = getBoard().getBoard();
-            
+
             HashSet<Player> winners = new HashSet<>();
-            
+
             winners.addAll(scanRows(board));
             winners.addAll(scanColumns(board));
             winners.addAll(scanDiagonals(board));
-            
+
             if (winners.size() == 1) {
                 return winners.contains(challenger) ? challenger : opponent;
             } else if (winners.size() == 2) {
@@ -63,7 +63,7 @@ public class Game
             } else {
                 return null;
             }
-            
+
         }
 
 
@@ -141,10 +141,10 @@ public class Game
     {
         HashSet<Player> winners = new HashSet<>();
         int sameInRow = 0;
-        
+
         int m = Board.NUM_ROWS;
         int n = Board.NUM_COLUMNS;
-        
+
         for (int slice = 0; slice < m + n - 1; ++slice) {
             Player previousPlayer = null;
             sameInRow = 0;
@@ -153,7 +153,7 @@ public class Game
             int z2 = slice < m ? 0 : slice - m + 1;
             for (int j = slice - z2; j >= z1; --j) {
                 Player currentPlayer = board[slice - j][j];
-                
+
                 if (currentPlayer != null) {
                     if (currentPlayer == previousPlayer) {
                         sameInRow++;
@@ -166,7 +166,7 @@ public class Game
                         sameInRow = 1;
                         previousPlayer = currentPlayer;
                     }
-                    
+
                 } else {
                     sameInRow = 0;
                     previousPlayer = null;
@@ -176,17 +176,17 @@ public class Game
             }
             System.out.println("\n");
         }
-        
+
         for (int slice = m + n - 1; slice > 0; --slice) {
             Player previousPlayer = null;
             sameInRow = 0;
             System.out.println(String.format("Slice %d: ", slice));
             int z1 = slice < n ? 0 : slice - n + 1;
             int z2 = slice < m ? 0 : slice - m + 1;
-            
+
             for (int j = z1; j <= slice - z2; ++j) {
                 Player currentPlayer = board[slice - j][m - j - 1];
-                
+
                 if (currentPlayer != null) {
                     if (currentPlayer == previousPlayer) {
                         sameInRow++;
@@ -209,12 +209,10 @@ public class Game
             }
             System.out.println("\n");
         }
-        
+
         return winners;
     }
-    
 // TODO: Write a test instead of this
-    
 //    public static void main(String[] args)
 //    {
 //        Game game = new Game();

@@ -14,11 +14,4 @@ public class GameStart extends Command
     {
         protocolRepresentation = NAME + " "; // + args and/or something
     }
-
-    @Override
-    public void execute()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
 }

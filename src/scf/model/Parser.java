@@ -39,193 +39,193 @@ import scf.model.command.response.Rpl_Serverhello;
 public class Parser
 {
 
-    public static Command parse(String toParse)
-    {
-        if (toParse == null) {
-            throw new IllegalArgumentException("The String to parse may not be null!");
-        }
+	public static Command parse(String toParse)
+	{
+		if (toParse == null) {
+			throw new IllegalArgumentException("The String to parse may not be null!");
+		}
 
-        // Some preparations
-        String[] message = toParse.trim().split(" ");
+		// Some preparations
+		String[] message = toParse.trim().split(" ");
 
-        if (message.length <= 0) {
-            throw new IllegalArgumentException("The String to parse may not be empty!");
-        }
+		if (message.length <= 0) {
+			throw new IllegalArgumentException("The String to parse may not be empty!");
+		}
 
-        Command cmd;
+		Command cmd;
 
-        switch (message[0].toLowerCase()) {
+		switch (message[0].toLowerCase()) {
 
-            // Commands recievable by servers
-            case "clienthello":
-                cmd = new ClientHello();
-                break;
+			// Commands recievable by servers
+			case "clienthello":
+				cmd = new ClientHello();
+				break;
 
-            case "getgames":
-                cmd = new GetGames();
-                break;
+			case "getgames":
+				cmd = new GetGames();
+				break;
 
-            case "joingame":
-                cmd = new JoinGame();
-                break;
+			case "joingame":
+				cmd = new JoinGame();
+				break;
 
-            case "creategame":
-                cmd = new CreateGame();
-                break;
+			case "creategame":
+				cmd = new CreateGame();
+				break;
 
-            case "placedisc":
-                cmd = new PlaceDisc();
-                break;
+			case "placedisc":
+				cmd = new PlaceDisc();
+				break;
 
-            case "leavegame":
-                cmd = new LeaveGame();
-                break;
+			case "leavegame":
+				cmd = new LeaveGame();
+				break;
 
-            case "reconnect":
-                cmd = new Reconnect();
-                break;
+			case "reconnect":
+				cmd = new Reconnect();
+				break;
 
-            case "pong":
-                cmd = new Pong();
-                break;
+			case "pong":
+				cmd = new Pong();
+				break;
 
-            // Commands recievable by clients
-            case "gameslist":
-                cmd = new GamesList();
-                break;
+			// Commands recievable by clients
+			case "gameslist":
+				cmd = new GamesList();
+				break;
 
-            case "gamestart":
-                cmd = new GameStart();
-                break;
+			case "gamestart":
+				cmd = new GameStart();
+				break;
 
-            case "moveresult":
-                cmd = new MoveResult();
-                break;
+			case "moveresult":
+				cmd = new MoveResult();
+				break;
 
-            case "victory":
-                cmd = new Victory();
-                break;
+			case "victory":
+				cmd = new Victory();
+				break;
 
-            case "ping":
-                cmd = new Ping();
-                break;
+			case "ping":
+				cmd = new Ping();
+				break;
 
-            case "opponentleft":
-                cmd = new OpponentLeft();
-                break;
+			case "opponentleft":
+				cmd = new OpponentLeft();
+				break;
 
-            // Replies
-            case "response":
-                if (message.length <= 1) {
-                    throw new IllegalArgumentException("The response number must be specidified"); // TODO No exception but error?
-                }
-                cmd = getReply(message[1]);
-                break;
+			// Replies
+			case "response":
+				if (message.length <= 1) {
+					throw new IllegalArgumentException("The response number must be specidified"); // TODO No exception but error?
+				}
+				cmd = getReply(message[1]);
+				break;
 
-            // Errors
-            case "error":
-                if (message.length <= 1) {
-                    throw new IllegalArgumentException("The error number must be specidified"); // TODO No exception but error?
-                }
-                cmd = getError(message[1]);
-                break;
+			// Errors
+			case "error":
+				if (message.length <= 1) {
+					throw new IllegalArgumentException("The error number must be specidified"); // TODO No exception but error?
+				}
+				cmd = getError(message[1]);
+				break;
 
-            // No command could be parsed
-            default:
-                cmd = null; // TODO Best solution?
-                break;
-        }
+			// No command could be parsed
+			default:
+				cmd = null; // TODO Best solution?
+				break;
+		}
 
-        return cmd;
-    }
+		return cmd;
+	}
 
-    private static Command getReply(String rplNum)
-    {
-        Command cmd;
+	private static Command getReply(String rplNum)
+	{
+		Command cmd;
 
-        switch (rplNum) {
-            case "001":
-                cmd = new Rpl_Serverhello();
-                break;
+		switch (rplNum) {
+			case "001":
+				cmd = new Rpl_Serverhello();
+				break;
 
-            case "002":
-                cmd = new Rpl_Gamecreated();
-                break;
+			case "002":
+				cmd = new Rpl_Gamecreated();
+				break;
 
-            case "003":
-                cmd = new Rpl_Joinedgame();
-                break;
+			case "003":
+				cmd = new Rpl_Joinedgame();
+				break;
 
-            case "004":
-                cmd = new Rpl_Discplaced();
-                break;
+			case "004":
+				cmd = new Rpl_Discplaced();
+				break;
 
-            case "005":
-                cmd = new Rpl_Leftgame();
-                break;
+			case "005":
+				cmd = new Rpl_Leftgame();
+				break;
 
-            case "006":
-                cmd = new Rpl_Reconnected();
-                break;
+			case "006":
+				cmd = new Rpl_Reconnected();
+				break;
 
-            default:
-                cmd = null;
-                break;
-        }
+			default:
+				cmd = null;
+				break;
+		}
 
-        return cmd;
-    }
+		return cmd;
+	}
 
-    private static Command getError(String errNum)
-    {
-        Command cmd;
+	private static Command getError(String errNum)
+	{
+		Command cmd;
 
-        switch (errNum) {
-            case "101":
-                cmd = new Err_Badcommand();
-                break;
+		switch (errNum) {
+			case "101":
+				cmd = new Err_Badcommand();
+				break;
 
-            case "102":
-                cmd = new Err_Badsyntax();
-                break;
+			case "102":
+				cmd = new Err_Badsyntax();
+				break;
 
-            case "103":
-                cmd = new Err_Badparams();
-                break;
+			case "103":
+				cmd = new Err_Badparams();
+				break;
 
-            case "110":
-                cmd = new Err_Nicknameinuse();
-                break;
+			case "110":
+				cmd = new Err_Nicknameinuse();
+				break;
 
-            case "111":
-                cmd = new Err_Nicknamenotvalid();
-                break;
+			case "111":
+				cmd = new Err_Nicknamenotvalid();
+				break;
 
-            case "120":
-                cmd = new Err_Nosuchgame();
-                break;
+			case "120":
+				cmd = new Err_Nosuchgame();
+				break;
 
-            case "121":
-                cmd = new Err_Gamefull();
-                break;
+			case "121":
+				cmd = new Err_Gamefull();
+				break;
 
-            case "122":
-                cmd = new Err_Badcolumn();
-                break;
+			case "122":
+				cmd = new Err_Badcolumn();
+				break;
 
-            case "130":
-                cmd = new Err_Unknownplayer();
-                break;
+			case "130":
+				cmd = new Err_Unknownplayer();
+				break;
 
-            case "131":
-                cmd = new Err_Playeralive();
-                break;
+			case "131":
+				cmd = new Err_Playeralive();
+				break;
 
-            default:
-                cmd = null;
-                break;
-        }
+			default:
+				cmd = null;
+				break;
+		}
 
-        return cmd;
-    }
+		return cmd;
+	}
 }
