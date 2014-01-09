@@ -1,6 +1,5 @@
 package scf.parser;
 
-import scf.model.Player;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
 import scf.model.command.CreateGame;
@@ -32,6 +31,8 @@ import scf.model.command.response.Rpl_Joinedgame;
 import scf.model.command.response.Rpl_Leftgame;
 import scf.model.command.response.Rpl_Reconnected;
 import scf.model.command.response.Rpl_Serverhello;
+import scf.parser.exception.ParserException;
+import scf.parser.exception.ParserIllegalPlayerNameException;
 
 /**
  *
@@ -40,7 +41,7 @@ import scf.model.command.response.Rpl_Serverhello;
 public class Parser
 {
 
-	public static Command parse(String toParse)
+	public static Command parse(String toParse) throws ParserException
 	{
 		if (toParse == null) {
 			throw new IllegalArgumentException("The String to parse may not be null!");
@@ -65,7 +66,7 @@ public class Parser
                     if (playerID.length() >= 2 && playerID.length() <= 30) {
                         cmd = new ClientHello(playerID);
                     } else {
-                        cmd = null;
+                        throw new ParserIllegalPlayerNameException("PlayerID is either too long or to short.");
                     }
                     
                     
@@ -94,7 +95,18 @@ public class Parser
 				break;
 
 			case Reconnect.NAME:
-				cmd = new Reconnect();
+				if (message.length == 2) {
+                    String playerID = message[1];
+                    
+                    if (playerID.length() >= 2 && playerID.length() <= 30) {
+                        cmd = new Reconnect(playerID);
+                    } else {
+                        throw new ParserIllegalPlayerNameException("PlayerID is either too short or too long.");
+                    }
+                    
+                    
+                }
+				
 				break;
 
 			case Pong.NAME:
