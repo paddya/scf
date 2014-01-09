@@ -26,7 +26,7 @@ public class Server
     {
         final ExecutorService pool;
         final ServerSocket serverSocket;
-        int port = 13370 + (int)(Math.random() * 10); // Randomized for debugging purposes
+        int port = 13370 + (int)(Math.random() * 100); // Randomized for debugging purposes
         System.out.println("Server port: " + port);
         Thread serverThread;
 

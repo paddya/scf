@@ -2,7 +2,10 @@ package scfd;
 
 import java.util.concurrent.*;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import scf.model.command.*;
+import scf.model.command.response.Rpl_Leftgame;
 
 
 
@@ -13,27 +16,27 @@ public class GameThread extends Thread
     private String gameID;
     private String challengerID;
     private String opponentID;
-    private ConcurrentLinkedQueue<Command> challengerQueueIn;
-    private ConcurrentLinkedQueue<Command> challengerQueueOut;
-    private ConcurrentLinkedQueue<Command> opponentQueueIn;
-    private ConcurrentLinkedQueue<Command> opponentQueueOut;
-    private Object mutexIn;
-    private Object challengerMutexOut;
-    private Object opponentMutexOut;
+    private LinkedBlockingQueue<Command> challengerQueueIn;
+    private LinkedBlockingQueue<Command> challengerQueueOut;
+    private LinkedBlockingQueue<Command> opponentQueueIn;
+    private LinkedBlockingQueue<Command> opponentQueueOut;
+    private boolean endGameFlag;
 
     
     
     public void enqueue(Command cmd, String playerID)
     {
         if (playerID.equals(challengerID)) {
-            synchronized (this.mutexIn) {
-                this.challengerQueueIn.add(cmd);
-                this.mutexIn.notifyAll();
+            try {
+                this.challengerQueueIn.put(cmd);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GameThread.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (playerID.equals(opponentID)) {
-            synchronized (this.mutexIn) {
-                this.opponentQueueIn.add(cmd);
-                this.mutexIn.notifyAll();
+            try {
+                this.opponentQueueIn.put(cmd);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GameThread.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
             // throw new YouStupidException
@@ -44,31 +47,22 @@ public class GameThread extends Thread
     
     public Command blockinglyDequeue(String playerID)
     {
-        Command cmd;
+        Command cmd = null;
 
         if (playerID.equals(challengerID)) {
-            while ((cmd = this.challengerQueueOut.poll()) == null) {
-                try {
-                    synchronized (this.challengerMutexOut) {
-                        this.challengerMutexOut.wait();
-                    }
-                } catch (InterruptedException e) {
-                    System.out.println("Interrupted, ya");
-                }
+            try {
+                cmd = this.challengerQueueOut.poll(5, TimeUnit.MINUTES);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GameThread.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } else if (playerID.equals(opponentID)) {
-            while ((cmd = this.opponentQueueOut.poll()) == null) {
-                try {
-                    synchronized (this.opponentMutexOut) {
-                        this.opponentMutexOut.wait();
-                    }
-                } catch (InterruptedException e) {
-                    System.out.println("Interrupted, ya");
-                }
+        }
+        
+        if (playerID.equals(opponentID)) {
+            try {
+                cmd = this.opponentQueueOut.poll(5, TimeUnit.MINUTES);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GameThread.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } else {
-            // Nonsensical playerID
-            cmd = null;
         }
 
         return cmd;
@@ -78,15 +72,13 @@ public class GameThread extends Thread
     
     public GameThread(String challengerID)
     {
+        this.endGameFlag = false;
         this.gameID = generateString(32);
         this.challengerID = challengerID;
-        this.challengerQueueIn = new ConcurrentLinkedQueue<>();
-        this.challengerQueueOut = new ConcurrentLinkedQueue<>();
-        this.opponentQueueIn = new ConcurrentLinkedQueue<>();
-        this.opponentQueueOut = new ConcurrentLinkedQueue<>();
-        this.mutexIn = new Object();
-        this.challengerMutexOut = new Object();
-        this.opponentMutexOut = new Object();
+        this.challengerQueueIn = new LinkedBlockingQueue<>();
+        this.challengerQueueOut = new LinkedBlockingQueue<>();
+        this.opponentQueueIn = new LinkedBlockingQueue<>();
+        this.opponentQueueOut = new LinkedBlockingQueue<>();
     }
     
     
@@ -125,42 +117,68 @@ public class GameThread extends Thread
     @Override
     public void run()
     {
-        while (true) {
+        System.out.println("GameThread is running ...");
+        
+        while (!endGameFlag) {
             // Handle new command from challenger
-            Command c = this.challengerQueueIn.poll();
+            Command c = null;
+            try {
+                c = this.challengerQueueIn.poll(5, TimeUnit.MINUTES);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GameThread.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
             if (c != null) {
                 System.out.println("new command from challenger");
-                handleCommand(c, this.challengerID);
+                handleChallengerCommand(c);
             }
 
 
             // Handle new command from opponent
-            Command o = this.opponentQueueIn.poll();
+            Command o = null;
+            try {
+                o = this.opponentQueueIn.poll(5, TimeUnit.MINUTES);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GameThread.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
             if (o != null) {
                 System.out.println("new command from opponent");
-                handleCommand(o, this.opponentID);
-            }
-
-
-            // Wait for next command
-            try {
-                synchronized (this.mutexIn) {
-                    this.mutexIn.wait();
-                }
-            } catch (InterruptedException e) {
-                System.out.println("Interrupted, ya");
+                handleOpponentCommand(o);
             }
         }
+        
+        System.out.println("GameThread is shutting down ...");
     }
 
     
     
-    private Command handleCommand(Command cmd, String playerID)
+    private void handleChallengerCommand(Command cmd)
+    {
+        if (cmd instanceof LeaveGame) {
+            // Challenger wants to leave the game
+            this.challengerID = null;
+            
+            System.out.println("Challenger left the game");
+            
+            try {
+                // Inform challenger player thread
+                this.challengerQueueOut.put(new Rpl_Leftgame());
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GameThread.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            
+            // End execution of thread
+            this.endGameFlag = true;
+        }
+    }
+    
+    
+    
+    private void handleOpponentCommand(Command cmd)
     {
         // To Do: Implement handler
-        return null;
     }
 
     

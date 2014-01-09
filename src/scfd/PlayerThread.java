@@ -120,6 +120,10 @@ public class PlayerThread extends Thread
         if (command instanceof JoinGame) {
             handleCommand((JoinGame)command);
         }
+        
+        if (command instanceof LeaveGame) {
+            handleCommand((LeaveGame)command);
+        }
     }
     
     
@@ -128,6 +132,7 @@ public class PlayerThread extends Thread
     {
         // Create new game thread
         this.gameThread = new GameThread(this.player.getName());
+        System.out.println("New game created with gameID: " + this.gameThread.getGameID());
         
         
         // Save gameThread for future joins
@@ -139,7 +144,20 @@ public class PlayerThread extends Thread
     public void handleCommand(JoinGame command)
     {
         // Join an existing game thread
-        this.gameThread = GameThreadMap.getInstance().get(command.getGameId());
+        String gid = command.getGameId();
+        this.gameThread = GameThreadMap.getInstance().get(gid);
         this.gameThread.joinGame(this.player.getName());
+    }
+    
+    
+    
+    public void handleCommand(LeaveGame command)
+    {
+        // Inform game thread about leaving of this.player
+        this.gameThread.enqueue(command, this.player.getName());
+        
+        
+        // Handle the response
+        Command res = this.gameThread.blockinglyDequeue(this.player.getName());
     }
 }
