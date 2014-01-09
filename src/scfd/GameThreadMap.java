@@ -10,23 +10,23 @@ import java.util.concurrent.*;
  * maps gameIDs to game thread objects
  * @author markus
  */
-public class GameMap extends ConcurrentHashMap<String, GameThread>
+public class GameThreadMap extends ConcurrentHashMap<String, GameThread>
 {
-    private static GameMap instance = null;
+    private static GameThreadMap instance = null;
     
     
     
-    private GameMap()
+    private GameThreadMap()
     {
-        // Can not access constructor from outside
+        // Private constructor
     }
     
     
     
-    public static GameMap getInstance() 
+    public static GameThreadMap getInstance() 
     {
         if (instance == null) {
-        instance = new GameMap();
+        instance = new GameThreadMap();
         }
         return instance;
     }

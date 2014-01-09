@@ -5,6 +5,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.io.*;
 import java.net.*;
+import scf.model.command.ClientHello;
+import scf.model.command.Command;
+import scf.model.command.Reconnect;
+import scf.parser.Parser;
 
 
 
@@ -71,7 +75,25 @@ class Listener implements Runnable
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("New client");
-                pool.execute(new PlayerThread(clientSocket));
+                
+                
+                // Initialize
+                BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                String s = br.readLine();
+                Command cmd = Parser.parse(s);
+                
+                try {
+                    ClientHello clientHello = (ClientHello) cmd;
+                    PlayerThread playerThread = new PlayerThread(clientSocket, clientHello.getPlayerID());
+                    pool.execute(playerThread);
+                } catch (ClassCastException e) {
+                    try {
+                        Reconnect reconnect = (Reconnect) cmd;
+                        
+                    } catch (ClassCastException e2) {
+                        System.out.println("First message from client to server MUST be CLIENTHELLO or RECONNECT");
+                    }
+                }
             }
         } catch (IOException e) {
             System.out.println("Failed to handle server socket");
