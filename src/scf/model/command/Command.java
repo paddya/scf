@@ -22,6 +22,7 @@ public abstract class Command
         return player;
     }
     
+	@Override
     public String toString() {
         return protocolRepresentation;
     }
