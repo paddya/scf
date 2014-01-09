@@ -11,9 +11,10 @@ public class ClientHello extends Command
 
     public static final String NAME = "CLIENTHELLO";
 
-    public ClientHello()
+    public ClientHello(String playerID)
     {
-        protocolRepresentation = NAME + " "; // + ...
+        this.playerID = playerID;
+        protocolRepresentation = String.format("%s %s", NAME, playerID);
     }
 
 	public String getPlayerID()

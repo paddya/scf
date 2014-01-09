@@ -14,4 +14,5 @@ import scf.model.command.Command;
  */
 public abstract class Error extends Command
 {
+    
 }

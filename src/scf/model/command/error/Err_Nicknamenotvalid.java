@@ -7,9 +7,10 @@ package scf.model.command.error;
  */
 public class Err_Nicknamenotvalid extends Error
 {
+    public static final String CODE = "111";
     
     public Err_Nicknamenotvalid()
     {
-        protocolRepresentation = "ERROR 111";
+        protocolRepresentation = "ERROR " + CODE;
     }    
 }

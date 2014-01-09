@@ -7,9 +7,9 @@ package scf.model.command.error;
  */
 public class Err_Unknownplayer extends Error
 {
-    
+    public static final String CODE = "130";
     public Err_Unknownplayer()
     {
-        protocolRepresentation = "ERROR 130";
+        protocolRepresentation = "ERROR " + CODE;
     }    
 }

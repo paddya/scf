@@ -7,10 +7,11 @@ package scf.model.command.response;
  */
 public class Rpl_Reconnected extends Reply
 {
-
+    public static final String CODE = "006";
+    
     public Rpl_Reconnected()
     {
-        protocolRepresentation = "RESPONSE 006";
+        protocolRepresentation = "RESPONSE " + CODE;
     }
 
 }

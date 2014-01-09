@@ -1,5 +1,6 @@
-
 package scf.model.command.error;
+
+
 
 /**
  *
@@ -7,9 +8,13 @@ package scf.model.command.error;
  */
 public class Err_Nicknameinuse extends Error
 {
-    
+
+    public static final String CODE = "110";
+
+
+
     public Err_Nicknameinuse()
     {
-        protocolRepresentation = "ERROR 110";
-    }    
+        protocolRepresentation = "ERROR " + CODE;
+    }
 }

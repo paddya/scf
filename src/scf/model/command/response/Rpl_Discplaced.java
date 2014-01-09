@@ -8,9 +8,11 @@ package scf.model.command.response;
 public class Rpl_Discplaced extends Reply
 {
 
+    public static final String CODE = "004";
+    
     public Rpl_Discplaced()
     {
-        protocolRepresentation = "RESPONSE 004";
+        protocolRepresentation = "RESPONSE " + CODE;
     }
 
 }

@@ -7,9 +7,10 @@ package scf.model.command.error;
  */
 public class Err_Badcommand extends Error
 {
+    public static final String CODE = "101";
     
     public Err_Badcommand()
     {
-        protocolRepresentation = "ERROR 101";
+        protocolRepresentation = "ERROR " + CODE;
     }    
 }

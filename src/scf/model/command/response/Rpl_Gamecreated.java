@@ -7,10 +7,11 @@ package scf.model.command.response;
  */
 public class Rpl_Gamecreated extends Reply
 {
-
+    public static final String CODE = "002";
+    
     public Rpl_Gamecreated()
     {
-        protocolRepresentation = "RESPONSE 002";
+        protocolRepresentation = "RESPONSE " + CODE;
     }
 
 }

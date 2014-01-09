@@ -8,8 +8,10 @@ package scf.model.command.error;
 public class Err_Gamefull extends Error
 {
     
+    public static final String CODE = "121";
+    
     public Err_Gamefull()
     {
-        protocolRepresentation = "ERROR 121";
+        protocolRepresentation = "ERROR " + CODE;
     }    
 }

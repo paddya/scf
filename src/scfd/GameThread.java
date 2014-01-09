@@ -175,11 +175,11 @@ public class GameThread extends Thread
 
         sleep(2000);
 
-        gt.enqueue(new ClientHello(), "markus");
+        gt.enqueue(new ClientHello("markus"), "markus");
 
         sleep(3000);
 
-        gt.enqueue(new ClientHello(), "patrick");
+        gt.enqueue(new ClientHello("patrick"), "patrick");
 
         Command cmd = gt.blockinglyDequeue("markus");
 

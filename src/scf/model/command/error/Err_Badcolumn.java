@@ -8,8 +8,10 @@ package scf.model.command.error;
 public class Err_Badcolumn extends Error
 {
     
+    public static final String CODE = "122";
+    
     public Err_Badcolumn()
     {
-        protocolRepresentation = "ERROR 122";
+        protocolRepresentation = "ERROR " + CODE;
     }    
 }

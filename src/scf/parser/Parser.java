@@ -53,13 +53,24 @@ public class Parser
 			throw new IllegalArgumentException("The String to parse may not be empty!");
 		}
 
-		Command cmd;
+		Command cmd = null;
 
 		switch (message[0].toUpperCase()) {
 
 			// Commands recievable by servers
 			case ClientHello.NAME:
-				cmd = new ClientHello();
+                if (message.length == 2) {
+                    String playerID = message[1];
+                    
+                    if (playerID.length() >= 2 && playerID.length() <= 30) {
+                        cmd = new ClientHello(playerID);
+                    } else {
+                        cmd = null;
+                    }
+                    
+                    
+                }
+				
 				break;
 
 			case GetGames.NAME:
@@ -145,27 +156,27 @@ public class Parser
 		Command cmd;
 
 		switch (rplNum) {
-			case "001":
+			case Rpl_Serverhello.CODE:
 				cmd = new Rpl_Serverhello();
 				break;
 
-			case "002":
+			case Rpl_Gamecreated.CODE:
 				cmd = new Rpl_Gamecreated();
 				break;
 
-			case "003":
+			case Rpl_Joinedgame.CODE:
 				cmd = new Rpl_Joinedgame();
 				break;
 
-			case "004":
+			case Rpl_Discplaced.CODE:
 				cmd = new Rpl_Discplaced();
 				break;
 
-			case "005":
+			case Rpl_Leftgame.CODE:
 				cmd = new Rpl_Leftgame();
 				break;
 
-			case "006":
+			case Rpl_Reconnected.CODE:
 				cmd = new Rpl_Reconnected();
 				break;
 
@@ -182,7 +193,7 @@ public class Parser
 		Command cmd;
 
 		switch (errNum) {
-			case "101":
+			case Err_Badcommand.CODE:
 				cmd = new Err_Badcommand();
 				break;
 
@@ -190,35 +201,35 @@ public class Parser
 				cmd = new Err_Badsyntax();
 				break;
 
-			case "103":
+			case Err_Badparams.CODE:
 				cmd = new Err_Badparams();
 				break;
 
-			case "110":
+			case Err_Nicknameinuse.CODE:
 				cmd = new Err_Nicknameinuse();
 				break;
 
-			case "111":
+			case Err_Nicknamenotvalid.CODE:
 				cmd = new Err_Nicknamenotvalid();
 				break;
 
-			case "120":
+			case Err_Nosuchgame.CODE:
 				cmd = new Err_Nosuchgame();
 				break;
 
-			case "121":
+			case Err_Gamefull.CODE:
 				cmd = new Err_Gamefull();
 				break;
 
-			case "122":
+			case Err_Badcolumn.CODE:
 				cmd = new Err_Badcolumn();
 				break;
 
-			case "130":
+			case Err_Unknownplayer.CODE:
 				cmd = new Err_Unknownplayer();
 				break;
 
-			case "131":
+			case Err_Playeralive.CODE:
 				cmd = new Err_Playeralive();
 				break;
 
