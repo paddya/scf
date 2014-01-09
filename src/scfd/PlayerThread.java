@@ -2,8 +2,8 @@ package scfd;
 
 import java.io.*;
 import java.net.*;
-import scf.model.Parser;
 import scf.model.command.*;
+import scf.parser.Parser;
 
 public class PlayerThread extends Thread
 {
