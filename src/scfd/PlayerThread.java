@@ -36,7 +36,7 @@ public class PlayerThread extends Thread
 
             try {
                 ClientHello cmd = (ClientHello) Parser.parse(clientHello);
-                this.playerID = cmd.getPlayer().getName();
+                this.playerID = cmd.getPlayerID();
             } catch (ClassCastException e) {
                 System.out.println("Client did not send clienthello as first message");
                 this.socket.close();
