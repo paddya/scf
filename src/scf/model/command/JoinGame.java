@@ -8,8 +8,10 @@ public class JoinGame extends Command
 {
 
     public static final String NAME = "JOINGAME";
+	
+	private String gameId;
 
-    public JoinGame()
+    public JoinGame(String gameId)
     {
         protocolRepresentation = NAME + " "; // + ...
     }

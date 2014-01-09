@@ -1,4 +1,4 @@
-package scf.model;
+package scf.parser;
 
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
@@ -54,68 +54,68 @@ public class Parser
 
 		Command cmd;
 
-		switch (message[0].toLowerCase()) {
+		switch (message[0].toUpperCase()) {
 
 			// Commands recievable by servers
-			case "clienthello":
+			case ClientHello.NAME:
 				cmd = new ClientHello();
 				break;
 
-			case "getgames":
+			case GetGames.NAME:
 				cmd = new GetGames();
 				break;
 
-			case "joingame":
-				cmd = new JoinGame();
+			case JoinGame.NAME:
+				cmd = new JoinGame(message[1]);
 				break;
 
-			case "creategame":
+			case CreateGame.NAME:
 				cmd = new CreateGame();
 				break;
 
-			case "placedisc":
+			case PlaceDisc.NAME:
 				cmd = new PlaceDisc();
 				break;
 
-			case "leavegame":
+			case LeaveGame.NAME:
 				cmd = new LeaveGame();
 				break;
 
-			case "reconnect":
+			case Reconnect.NAME:
 				cmd = new Reconnect();
 				break;
 
-			case "pong":
+			case Pong.NAME:
 				cmd = new Pong();
 				break;
 
 			// Commands recievable by clients
-			case "gameslist":
+			case GamesList.NAME:
 				cmd = new GamesList();
 				break;
 
-			case "gamestart":
+			case GameStart.NAME:
 				cmd = new GameStart();
 				break;
 
-			case "moveresult":
+			case MoveResult.NAME:
 				cmd = new MoveResult();
 				break;
 
-			case "victory":
+			case Victory.NAME:
 				cmd = new Victory();
 				break;
 
-			case "ping":
+			case Ping.NAME:
 				cmd = new Ping();
 				break;
 
-			case "opponentleft":
+			case OpponentLeft.NAME:
 				cmd = new OpponentLeft();
 				break;
 
 			// Replies
-			case "response":
+			case "RESPONSE":
 				if (message.length <= 1) {
 					throw new IllegalArgumentException("The response number must be specidified"); // TODO No exception but error?
 				}
@@ -123,7 +123,7 @@ public class Parser
 				break;
 
 			// Errors
-			case "error":
+			case "ERROR":
 				if (message.length <= 1) {
 					throw new IllegalArgumentException("The error number must be specidified"); // TODO No exception but error?
 				}
