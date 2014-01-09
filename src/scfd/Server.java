@@ -14,7 +14,11 @@ import scf.parser.Parser;
 import scf.parser.exception.ParserException;
 
 
-
+/**
+ * The server is the network front end
+ * it handles client connections (CLIENTHELLO) and reconnects (RECONNECT)
+ * @author Markus Schlegel
+ */
 public class Server
 {
 
@@ -22,7 +26,7 @@ public class Server
     {
         final ExecutorService pool;
         final ServerSocket serverSocket;
-        int port = 13370 + (int)(Math.random() * 10);
+        int port = 13370 + (int)(Math.random() * 10); // Randomized for debugging purposes
         System.out.println("Server port: " + port);
         Thread serverThread;
 
@@ -121,6 +125,7 @@ class Listener implements Runnable
                         playerThread.setSocket(clientSocket);
                     } catch (ClassCastException e2) {
                         System.out.println("First message from client to server MUST be CLIENTHELLO or RECONNECT");
+                        clientSocket.close();
                         continue;
                     }
                 }
@@ -129,9 +134,10 @@ class Listener implements Runnable
             System.out.println("Failed to handle server socket");
         } finally {
             pool.shutdown();
+            System.out.println("Thread pool shutting down");
 
             try {
-                pool.awaitTermination(4L, TimeUnit.SECONDS);
+                pool.awaitTermination(1L, TimeUnit.SECONDS);
                 if (!serverSocket.isClosed()) {
                     serverSocket.close();
                 }
