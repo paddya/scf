@@ -1,5 +1,6 @@
 package scf.parser;
 
+import scf.model.Player;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
 import scf.model.command.CreateGame;
@@ -225,7 +226,7 @@ public class Parser
 				cmd = null;
 				break;
 		}
-
+		
 		return cmd;
 	}
 }

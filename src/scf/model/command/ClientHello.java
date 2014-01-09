@@ -6,6 +6,8 @@ package scf.model.command;
  */
 public class ClientHello extends Command
 {
+	
+	private String playerID;
 
     public static final String NAME = "CLIENTHELLO";
 
@@ -13,5 +15,15 @@ public class ClientHello extends Command
     {
         protocolRepresentation = NAME + " "; // + ...
     }
+
+	public String getPlayerID()
+	{
+		return playerID;
+	}
+
+	public void setPlayerID(String playerID)
+	{
+		this.playerID = playerID;
+	}
 
 }

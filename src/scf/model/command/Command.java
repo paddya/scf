@@ -8,19 +8,7 @@ import scf.model.Player;
  */
 public abstract class Command
 {
-
-    private Player player;
     protected String protocolRepresentation = "";
-
-    public void setPlayer(Player player)
-    {
-        this.player = player;
-    }
-
-    public Player getPlayer()
-    {
-        return player;
-    }
     
 	@Override
     public String toString() {
