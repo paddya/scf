@@ -16,4 +16,11 @@ public class JoinGame extends Command
         protocolRepresentation = NAME + " "; // + ...
     }
 
+
+
+    public String getGameId()
+    {
+        return gameId;
+    }
+
 }

@@ -2,11 +2,10 @@ package scfd;
 
 import java.io.*;
 import java.net.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import scf.model.Player;
 import scf.model.command.*;
 import scf.parser.Parser;
+import scf.parser.exception.ParserException;
 
 public class PlayerThread extends Thread
 {
@@ -81,6 +80,15 @@ public class PlayerThread extends Thread
                 
                 if (line != null) {
                     System.out.println(this.player.getName() + "(" + Thread.currentThread().getId() + ") said: " + line);
+                    
+                    
+                    // Try to parse and handle the command
+                    try {
+                        Command cmd = Parser.parse(line);
+                        handleCommand(cmd);
+                    } catch (ParserException ex) {
+                        System.out.println("Parse exception");
+                    }
                 } else {
                     // End of stream
                     System.out.println(this.player.getName() + " disconnected");
@@ -99,5 +107,39 @@ public class PlayerThread extends Thread
         } catch (IOException e) {
             System.out.println("Gnah");
         }
+    }
+    
+    
+    
+    public void handleCommand(Command command)
+    {
+        if (command instanceof CreateGame) {
+            handleCommand((CreateGame)command);
+        }
+        
+        if (command instanceof JoinGame) {
+            handleCommand((JoinGame)command);
+        }
+    }
+    
+    
+    
+    public void handleCommand(CreateGame command)
+    {
+        // Create new game thread
+        this.gameThread = new GameThread(this.player.getName());
+        
+        
+        // Save gameThread for future joins
+        GameThreadMap.getInstance().put(gameThread.getGameID(), gameThread);
+    }
+    
+    
+    
+    public void handleCommand(JoinGame command)
+    {
+        // Join an existing game thread
+        this.gameThread = GameThreadMap.getInstance().get(command.getGameId());
+        this.gameThread.joinGame(this.player.getName());
     }
 }
