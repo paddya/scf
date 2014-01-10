@@ -83,11 +83,13 @@ class Listener implements Runnable
             // Accept loop
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("New client");
+                
                 
                 
                 // Either create a new thread (CLIENTHELLO) or unfreeze an old one (RECONNECT)
                 BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                DataOutputStream outToClient = new DataOutputStream(clientSocket.getOutputStream());
+                
                     String s = br.readLine();
                 Command cmd;
                 
@@ -95,6 +97,7 @@ class Listener implements Runnable
                     cmd = Parser.parse(s);
                 } catch (ParserException ex) {
                     System.out.println("Parse error on first message. Client is not even trying.");
+                    outToClient.writeBytes("You did not even try! " + ex.getMessage());
                     clientSocket.close();
                     continue;
                 }
@@ -102,6 +105,7 @@ class Listener implements Runnable
                 try {
                     // CLIENTHELLO
                     ClientHello clientHello = (ClientHello) cmd;
+                    System.out.println(String.format("New client named %s", clientHello.getPlayerID()));
                     PlayerThread playerThread = new PlayerThread(clientSocket, clientHello.getPlayerID());
                     
                     
@@ -116,6 +120,7 @@ class Listener implements Runnable
                         Reconnect reconnect = (Reconnect) cmd;
                         PlayerThread playerThread;
                         
+                        System.out.println(String.format("Reconnected client named %s", reconnect.getPlayerID()));
                         
                         // Retrieve old playerThread for this player
                         playerThread = PlayerThreadMap.getInstance().get(reconnect.getPlayerID());
