@@ -1,5 +1,6 @@
-
 package scf.model.command;
+
+
 
 /**
  *
@@ -8,11 +9,21 @@ package scf.model.command;
 public class MoveResult extends Command
 {
 
+    private String playerWithToken;
+    private String[][] board;
+
     public static final String NAME = "MOVERESULT";
 
-    public MoveResult()
+
+
+    public MoveResult(String[][] board, String playerWithToken)
     {
+        this.board = board;
+        this.playerWithToken = playerWithToken;
+
         protocolRepresentation = NAME + " "; // + args and/or something
     }
 
 }
+
+

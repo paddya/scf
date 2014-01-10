@@ -1,5 +1,7 @@
 package scf.model.command;
 
+
+
 /**
  *
  * @author Ferdinand Sauer
@@ -8,9 +10,11 @@ public class PlaceDisc extends Command
 {
 
     public static final String NAME = "PLACEDISC";
-    
+
     private Integer column;
-    
+
+
+
     public PlaceDisc(Integer column)
     {
         this.column = column;
@@ -30,6 +34,7 @@ public class PlaceDisc extends Command
     {
         this.column = column;
     }
-    
-    
+
 }
+
+

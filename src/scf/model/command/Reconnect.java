@@ -1,5 +1,6 @@
-
 package scf.model.command;
+
+
 
 /**
  *
@@ -10,6 +11,8 @@ public class Reconnect extends Command
 
     private String playerID;
     public static final String NAME = "RECONNECT";
+
+
 
     public Reconnect(String playerID)
     {
@@ -30,6 +33,7 @@ public class Reconnect extends Command
     {
         this.playerID = playerID;
     }
-    
-    
+
 }
+
+

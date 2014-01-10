@@ -4,6 +4,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
+
+
 /**
  *
  * @author paddya
@@ -15,35 +17,49 @@ public class Game
     private Player challenger;
     private Player opponent;
 
+
+
     public Board getBoard()
     {
         return board;
     }
+
+
 
     public void setBoard(Board board)
     {
         this.board = board;
     }
 
+
+
     public Player getChallenger()
     {
         return challenger;
     }
+
+
 
     public void setChallenger(Player challenger)
     {
         this.challenger = challenger;
     }
 
+
+
     public Player getOpponent()
     {
         return opponent;
     }
 
+
+
     public void setOpponent(Player opponent)
     {
         this.opponent = opponent;
     }
+
+
 
     public Player getWinner()
     {
@@ -66,9 +82,10 @@ public class Game
 
         }
 
-
         return null;
     }
+
+
 
     private Set<Player> scanColumns(Player[][] board)
     {
@@ -103,6 +120,8 @@ public class Game
 
     }
 
+
+
     private Set<Player> scanRows(Player[][] board)
     {
         HashSet<Player> winners = new HashSet<>();
@@ -136,6 +155,8 @@ public class Game
         return winners;
 
     }
+
+
 
     private Set<Player> scanDiagonals(Player[][] board)
     {
@@ -212,6 +233,44 @@ public class Game
 
         return winners;
     }
+
+
+
+    public Player[][] parseStringBoard(String[][] stringBoard)
+    {
+        // Everything correct?
+        if (stringBoard.length != Board.NUM_ROWS) {
+            throw new IllegalArgumentException("Board out of bounds (rows)");
+        }
+        for (int i = 0; i < Board.NUM_ROWS; ++i) {
+            if (stringBoard[i].length != Board.NUM_COLUMNS) {
+                throw new IllegalArgumentException("Board out of bounds (column " + i + ")");
+            }
+        }
+
+        // Everything correct! Lets get this party started.
+        Player[][] playerBoard = new Player[Board.NUM_ROWS][Board.NUM_COLUMNS];
+
+        for (int row = 0; row < Board.NUM_ROWS; ++row) {
+            for (int col = 0; col < Board.NUM_COLUMNS; ++col) {
+                switch (stringBoard[row][col].toLowerCase()) {
+                    case "x":
+                        playerBoard[row][col] = challenger;
+                        break;
+                    case "o":
+                        playerBoard[row][col] = opponent;
+                        break;
+                    case "_":
+                        playerBoard[row][col] = null; // Just for readability
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknown symbol on board: " + stringBoard[row][col]);
+                }
+            }
+        }
+
+        return playerBoard;
+    }
 // TODO: Write a test instead of this
 //    public static void main(String[] args)
 //    {
@@ -250,3 +309,5 @@ public class Game
 //        
 //    }
 }
+
+
