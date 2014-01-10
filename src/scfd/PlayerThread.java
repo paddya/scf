@@ -2,6 +2,7 @@ package scfd;
 
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import scf.model.Player;
 import scf.model.command.*;
 import scf.parser.Parser;
@@ -14,15 +15,15 @@ public class PlayerThread extends Thread
     private Player player;
     private String game;
     private GameThread gameThread;
+    private final ConcurrentLinkedQueue<Command> mailbox;
     private BufferedReader in;
     private PrintWriter out;
-    private final Object mutex;
 
 
 
     public PlayerThread(Socket socket, String playerID)
     {
-        this.mutex = new Object();
+        this.mailbox = new ConcurrentLinkedQueue<>();
         this.setSocket(socket);
 //         this.player = LOOKUP(playerID)
         this.player = new Player();
@@ -62,8 +63,8 @@ public class PlayerThread extends Thread
         
         
         // Notify waiting thread
-        synchronized (this.mutex) {
-            this.mutex.notifyAll();
+        synchronized (this) {
+            notifyAll();
         }
     }
 
@@ -95,9 +96,9 @@ public class PlayerThread extends Thread
                     this.socket.close();
                     
                     // Wait until the same client reconnects
-                    synchronized (this.mutex) {
+                    synchronized (this) {
                         try {
-                            this.mutex.wait();
+                            wait();
                         } catch (InterruptedException ex) {
                             System.out.println("InterruptedException");
                         }
@@ -136,7 +137,7 @@ public class PlayerThread extends Thread
     public void handleCommand(CreateGame command)
     {
         // Create new game thread
-        this.gameThread = new GameThread(this.player.getName());
+        this.gameThread = new GameThread(this);
         System.out.println("New game created with gameID: " + this.gameThread.getGameID());
         
         
@@ -151,7 +152,7 @@ public class PlayerThread extends Thread
         // Join an existing game thread
         String gid = command.getGameId();
         this.gameThread = GameThreadMap.getInstance().get(gid);
-        this.gameThread.joinGame(this.player.getName());
+        this.gameThread.joinGame(this);
     }
     
     
@@ -163,6 +164,20 @@ public class PlayerThread extends Thread
         
         
         // Handle the response
-        Command res = this.gameThread.blockinglyDequeue(this.player.getName());
+//        Command res = this.gameThread.blockinglyDequeue(this.player.getName());
+    }
+
+
+
+    public Player getPlayer()
+    {
+        return player;
+    }
+
+
+
+    public ConcurrentLinkedQueue<Command> getMailbox()
+    {
+        return mailbox;
     }
 }

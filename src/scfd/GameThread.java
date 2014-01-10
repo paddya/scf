@@ -14,22 +14,20 @@ public class GameThread extends Thread
 {
 
     private String gameID;
-    private String challengerID;
-    private String opponentID;
-    private ConcurrentLinkedQueue<Command> challengerQueueIn;
-    private ConcurrentLinkedQueue<Command> challengerQueueOut;
-    private ConcurrentLinkedQueue<Command> opponentQueueIn;
-    private ConcurrentLinkedQueue<Command> opponentQueueOut;
+    private PlayerThread challengerThread;
+    private PlayerThread opponentThread;
+    private ConcurrentLinkedQueue<Command> challengerMailbox;
+    private ConcurrentLinkedQueue<Command> opponentMailbox;
     private boolean die;
 
     
     
     public synchronized void enqueue(Command cmd, String playerID)
     {
-        if (playerID.equals(challengerID)) {
-            this.challengerQueueIn.add(cmd);
-        } else if (playerID.equals(opponentID)) {
-            this.opponentQueueIn.add(cmd);
+        if (playerID.equals(this.challengerThread.getPlayer().getName())) {
+            this.challengerMailbox.add(cmd);
+        } else if (playerID.equals(this.opponentThread.getPlayer().getName())) {
+            this.opponentMailbox.add(cmd);
         } else {
             // throw new YouStupidException
         }
@@ -40,41 +38,13 @@ public class GameThread extends Thread
 
     
     
-    public Command blockinglyDequeue(String playerID)
-    {
-//        Command cmd = null;
-//
-//        if (playerID.equals(challengerID)) {
-//            try {
-//                cmd = this.challengerQueueOut.poll(5, TimeUnit.MINUTES);
-//            } catch (InterruptedException ex) {
-//                Logger.getLogger(GameThread.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-//        
-//        if (playerID.equals(opponentID)) {
-//            try {
-//                cmd = this.opponentQueueOut.poll(5, TimeUnit.MINUTES);
-//            } catch (InterruptedException ex) {
-//                Logger.getLogger(GameThread.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-//
-//        return cmd;
-        return null;
-    }
-
-    
-    
-    public GameThread(String challengerID)
+    public GameThread(PlayerThread challengerThread)
     {
         this.die = false;
         this.gameID = generateString(32);
-        this.challengerID = challengerID;
-        this.challengerQueueIn = new ConcurrentLinkedQueue<>();
-        this.challengerQueueOut = new ConcurrentLinkedQueue<>();
-        this.opponentQueueIn = new ConcurrentLinkedQueue<>();
-        this.opponentQueueOut = new ConcurrentLinkedQueue<>();
+        this.challengerThread = challengerThread;
+        this.challengerMailbox = new ConcurrentLinkedQueue<>();
+        this.opponentMailbox = new ConcurrentLinkedQueue<>();
     }
     
     
@@ -99,9 +69,9 @@ public class GameThread extends Thread
     
     
     
-    public void joinGame(String opponentID)
+    public void joinGame(PlayerThread opponentThread)
     {
-        this.opponentID = opponentID;
+        this.opponentThread = opponentThread;
 
 
         // Start the game
@@ -118,7 +88,7 @@ public class GameThread extends Thread
         while (true) {
             // Handle new command from challenger
             Command c = null;
-            c = this.challengerQueueIn.poll();
+            c = this.challengerMailbox.poll();
 
             if (c != null) {
                 System.out.println("new command from challenger");
@@ -128,7 +98,7 @@ public class GameThread extends Thread
 
             // Handle new command from opponent
             Command o = null;
-            o = this.opponentQueueIn.poll();
+            o = this.opponentMailbox.poll();
 
             if (o != null) {
                 System.out.println("new command from opponent");
@@ -165,12 +135,11 @@ public class GameThread extends Thread
     {
         if (cmd instanceof LeaveGame) {
             // Challenger wants to leave the game
-            this.challengerID = null;
             System.out.println("Challenger left the game");
             
             
             // Inform challenger player thread
-            this.challengerQueueOut.add(new Rpl_Leftgame());
+            this.challengerThread.getMailbox().add(new Rpl_Leftgame());
             
             
             // Set die flag and inform thread
@@ -195,12 +164,5 @@ public class GameThread extends Thread
     public static void main(String[] args) throws InterruptedException
     {
         System.out.println("Testing GameThread");
-
-        GameThread gt = new GameThread("markus");
-        gt.joinGame("patrick");
-        
-        sleep(2000);
-        
-        gt.enqueue(new LeaveGame(), "markus");
     }
 }
