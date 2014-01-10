@@ -10,6 +10,9 @@ import java.util.logging.Logger;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
 import scf.model.command.Reconnect;
+import scf.model.command.error.Err_Nicknameinuse;
+import scf.model.command.response.Rpl_Reconnected;
+import scf.model.command.response.Rpl_Serverhello;
 import scf.parser.Parser;
 import scf.parser.exception.ParserException;
 
@@ -105,21 +108,32 @@ class Listener implements Runnable
                 try {
                     // CLIENTHELLO
                     ClientHello clientHello = (ClientHello) cmd;
-                    System.out.println(String.format("New client named %s", clientHello.getPlayerID()));
-                    PlayerThread playerThread = new PlayerThread(clientSocket, clientHello.getPlayerID());
                     
+                    if (!PlayerThreadMap.getInstance().containsKey(clientHello.getPlayerID())) {
+                        
+                        sendResponse(clientSocket, new Rpl_Serverhello());
                     
-                    // Save playerThread in PlayerThreadMap for future reconnects
-                    PlayerThreadMap.getInstance().put(clientHello.getPlayerID(), playerThread);
+                        System.out.println(String.format("New client named %s", clientHello.getPlayerID()));
+                        PlayerThread playerThread = new PlayerThread(clientSocket, clientHello.getPlayerID());
+
+
+                        // Save playerThread in PlayerThreadMap for future reconnects
+                        PlayerThreadMap.getInstance().put(clientHello.getPlayerID(), playerThread);
+
+                        // Run playerThread
+                        pool.execute(playerThread);
+                    } else {
+                        sendResponse(clientSocket, new Err_Nicknameinuse());
+                    }
                     
-                    // Run playerThread
-                    pool.execute(playerThread);
+
                 } catch (ClassCastException e) {
                     try {
                         // RECONNECT
                         Reconnect reconnect = (Reconnect) cmd;
                         PlayerThread playerThread;
                         
+                        sendResponse(clientSocket, new Rpl_Reconnected());
                         System.out.println(String.format("Reconnected client named %s", reconnect.getPlayerID()));
                         
                         // Retrieve old playerThread for this player
@@ -151,4 +165,14 @@ class Listener implements Runnable
             }
         }
     }
+    
+    public void sendResponse(Socket clientSocket, Command cmd)
+    {
+        try {
+            new DataOutputStream(clientSocket.getOutputStream()).writeBytes(cmd.toString() + "\n");
+        } catch (IOException ex) {
+            Logger.getLogger(Listener.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
 }

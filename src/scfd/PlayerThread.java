@@ -109,6 +109,11 @@ public class PlayerThread extends Thread
         }
     }
     
+    public void sendResponse(Command cmd)
+    {
+        out.print(cmd.toString() + "\n");
+    }
+    
     
     
     public void handleCommand(Command command)
