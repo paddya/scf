@@ -236,35 +236,35 @@ public class Game
 
 
 
-    public Player[][] parseStringBoard(String[][] stringBoard)
+    public Player[][] parseBoardString(String[][] stringBoard)
     {
         // Everything correct?
-        if (stringBoard.length != Board.NUM_ROWS) {
-            throw new IllegalArgumentException("Board out of bounds (rows)");
+        if (stringBoard.length != Board.NUM_COLUMNS) {
+            throw new IllegalArgumentException("Board out of bounds (columns)");
         }
-        for (int i = 0; i < Board.NUM_ROWS; ++i) {
-            if (stringBoard[i].length != Board.NUM_COLUMNS) {
+        for (int i = 0; i < Board.NUM_COLUMNS; ++i) {
+            if (stringBoard[i].length != Board.NUM_ROWS) {
                 throw new IllegalArgumentException("Board out of bounds (column " + i + ")");
             }
         }
 
         // Everything correct! Lets get this party started.
-        Player[][] playerBoard = new Player[Board.NUM_ROWS][Board.NUM_COLUMNS];
+        Player[][] playerBoard = new Player[Board.NUM_COLUMNS][Board.NUM_ROWS];
 
-        for (int row = 0; row < Board.NUM_ROWS; ++row) {
-            for (int col = 0; col < Board.NUM_COLUMNS; ++col) {
-                switch (stringBoard[row][col].toLowerCase()) {
+        for (int column = 0; column < Board.NUM_COLUMNS; ++column) {
+            for (int row = 0; row < Board.NUM_ROWS; ++row) {
+                switch (stringBoard[column][row].toLowerCase()) {
                     case "x":
-                        playerBoard[row][col] = challenger;
+                        playerBoard[column][row] = challenger;
                         break;
                     case "o":
-                        playerBoard[row][col] = opponent;
+                        playerBoard[column][row] = opponent;
                         break;
                     case "_":
-                        playerBoard[row][col] = null; // Just for readability
+                        playerBoard[column][row] = null; // Just for readability
                         break;
                     default:
-                        throw new IllegalArgumentException("Unknown symbol on board: " + stringBoard[row][col]);
+                        throw new IllegalArgumentException("Unknown symbol on board: " + stringBoard[column][row]);
                 }
             }
         }
