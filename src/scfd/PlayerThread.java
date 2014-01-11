@@ -3,8 +3,14 @@ package scfd;
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import scf.model.Player;
 import scf.model.command.*;
+import scf.model.command.response.Rpl_Discplaced;
+import scf.model.command.response.Rpl_Gamecreated;
+import scf.model.command.response.Rpl_Leftgame;
+import scf.model.command.response.Rpl_Serverhello;
 
 public class PlayerThread extends Thread
 {
@@ -14,7 +20,6 @@ public class PlayerThread extends Thread
     private GameThread gameThread;
     private final ConcurrentLinkedQueue<Command> porterMailbox;
     private final ConcurrentLinkedQueue<Command> gameMailbox;
-    private PrintWriter out;
 
 
 
@@ -64,14 +69,6 @@ public class PlayerThread extends Thread
         this.socket = socket;
         
         
-        // Set up read and write streams
-        try {
-            this.out = new PrintWriter(socket.getOutputStream(), true);
-        } catch (IOException e) {
-            System.out.println("Corrupted socket");
-        }
-        
-        
         // Notify waiting thread
 //        synchronized (this) {
 //            notifyAll();
@@ -85,22 +82,22 @@ public class PlayerThread extends Thread
     {
         System.out.println("player running");
         
+        sendResponse(new Rpl_Serverhello());
+        
         while (true) {
             // Check porter mailbox
-            Command pcmd = this.porterMailbox.poll();
-            if (pcmd != null) {
-                handlePorterCommand(pcmd);
+            while (!this.porterMailbox.isEmpty()) {
+                handlePorterCommand(this.porterMailbox.poll());
             }
 
 
             // Check game mailbox
-            Command gcmd = this.gameMailbox.poll();
-            if (gcmd != null) {
-                handleGameCommand(gcmd);
+            while (!this.gameMailbox.isEmpty()) {
+                handleGameCommand(this.gameMailbox.poll());
             }
 
 
-            // Sleep like a baby]
+            // Sleep like a baby
             try {
                 synchronized (this) {
                     System.out.println("Waiting");
@@ -109,15 +106,17 @@ public class PlayerThread extends Thread
             } catch (InterruptedException ex) {
                 System.out.println("Interrupted");
             }
-            
-            System.out.println("Waking up");
-            int a = 3+5;
         }
     }
     
     public void sendResponse(Command cmd)
     {
-        out.print(cmd.toString() + "\n");
+        // Theoretically not thread safe but practically never clashing with porter
+        try {
+            new DataOutputStream(this.socket.getOutputStream()).writeBytes(cmd.toString() + "\n");
+        } catch (IOException ex) {
+            System.out.println("Oh my");
+        }
     }
     
     
@@ -125,17 +124,17 @@ public class PlayerThread extends Thread
     public void handlePorterCommand(Command command)
     {
         System.out.println("handlePorterCommand");
-//        if (command instanceof CreateGame) {
-//            handlePorterCommand((CreateGame)command);
-//        }
-//        
-//        if (command instanceof JoinGame) {
-//            handlePorterCommand((JoinGame)command);
-//        } 
-//        
-//        if (command instanceof LeaveGame) {
-//            handlePorterCommand((LeaveGame)command);
-//        }
+        if (command instanceof CreateGame) {
+            handlePorterCommand((CreateGame)command);
+        }
+        
+        if (command instanceof JoinGame) {
+            handlePorterCommand((JoinGame)command);
+        } 
+        
+        if (command instanceof LeaveGame) {
+            handlePorterCommand((LeaveGame)command);
+        }
     }
     
     
@@ -149,6 +148,14 @@ public class PlayerThread extends Thread
         
         // Save gameThread for future joins
         GameThreadMap.getInstance().put(gameThread.getGameID(), gameThread);
+        
+        
+        // Run gameThread
+        Server.pool.execute(this.gameThread);
+        
+        
+        // Reply with a message of great success
+        sendResponse(new Rpl_Gamecreated());
     }
     
     
@@ -166,17 +173,14 @@ public class PlayerThread extends Thread
     public void handlePorterCommand(LeaveGame command)
     {
         // Inform game thread about leaving of this.player
-        this.gameThread.enqueue(command, this.player.getName());
-        
-        
-        // Handle the response
-//        Command res = this.gameThread.blockinglyDequeue(this.player.getName());
+        System.out.println("LEAVE GAME FROM PORTER");
+        this.gameThread.leaveGame(this);
     }
     
     
     
     public void handleGameCommand(Command command) {
-        
+        sendResponse(command);
     }
 
 
@@ -185,58 +189,4 @@ public class PlayerThread extends Thread
     {
         return player;
     }
-
-
-
-    public ConcurrentLinkedQueue<Command> getMailbox()
-    {
-        return porterMailbox;
-    }
-}
-
-
-
-
-class SocketHandler extends Thread
-{
-    private Socket socket;
-    private PlayerThread playerThread;
-    
-    
-    public SocketHandler(PlayerThread playerThread)
-    {
-        this.playerThread = playerThread;
-    }
-
-
-    @Override
-    public void run()
-    {
-        try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            while (true) {
-                String line = in.readLine();
-
-                if (line != null) {
-                    this.playerThread.getMailbox();
-                } else {
-                    // End of stream
-                    this.socket.close();
-
-                    // Wait until the same client reconnects
-                    synchronized (this) {
-                        try {
-                            wait();
-                        } catch (InterruptedException ex) {
-                            System.out.println("InterruptedException");
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("Gnah");
-        }
-    }
-    
 }

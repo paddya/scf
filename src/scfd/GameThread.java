@@ -5,8 +5,9 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import scf.model.command.*;
+import scf.model.command.response.Rpl_Gamecreated;
+import scf.model.command.response.Rpl_Joinedgame;
 import scf.model.command.response.Rpl_Leftgame;
-
 
 
 
@@ -20,41 +21,15 @@ public class GameThread extends Thread
     private ConcurrentLinkedQueue<Command> opponentMailbox;
     private boolean die;
 
-    
-    
-    public synchronized void enqueue(Command cmd, String playerID)
-    {
-        if (playerID.equals(this.challengerThread.getPlayer().getName())) {
-            this.challengerMailbox.add(cmd);
-        } else if (playerID.equals(this.opponentThread.getPlayer().getName())) {
-            this.opponentMailbox.add(cmd);
-        } else {
-            // throw new YouStupidException
-        }
-        
-        // Notify
-        notifyAll();
-    }
 
-    
-    
-    public GameThread(PlayerThread challengerThread)
+
+    public String getGameID()
     {
-        this.die = false;
-        this.gameID = generateString(32);
-        this.challengerThread = challengerThread;
-        this.challengerMailbox = new ConcurrentLinkedQueue<>();
-        this.opponentMailbox = new ConcurrentLinkedQueue<>();
-    }
-    
-    
-    
-    public String getGameID() {
         return this.gameID;
     }
 
-    
-    
+
+
     private static String generateString(int length)
     {
         String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -66,25 +41,56 @@ public class GameThread extends Thread
         return new String(text);
     }
 
-    
-    
-    
-    public void joinGame(PlayerThread opponentThread)
+
+
+    // API methods
+    // -----------
+    public GameThread(PlayerThread challengerThread)
     {
-        this.opponentThread = opponentThread;
-
-
-        // Start the game
-        this.start();
+        this.die = false;
+        this.gameID = generateString(32);
+        this.challengerThread = challengerThread;
+        this.challengerMailbox = new ConcurrentLinkedQueue<>();
+        this.opponentMailbox = new ConcurrentLinkedQueue<>();
     }
 
-    
-    
+
+
+    public synchronized void joinGame(PlayerThread opponentThread)
+    {
+        this.opponentThread = opponentThread;
+        this.opponentMailbox.add(new JoinGame(this.gameID));
+        
+        notifyAll();
+    }
+
+
+
+    public synchronized void leaveGame(PlayerThread leavingThread)
+    {
+        // Remove game from games list
+        GameThreadMap.getInstance().remove(this.gameID);
+
+        if (leavingThread.equals(this.challengerThread)) {
+            this.challengerMailbox.add(new LeaveGame());
+        }
+
+        if (leavingThread.equals(this.opponentThread)) {
+            this.opponentMailbox.add(new LeaveGame());
+        }
+        
+        notifyAll();
+    }
+
+
+
+    // Game thread logic
+    // -----------------
     @Override
     public void run()
     {
         System.out.println("GameThread is running ...");
-        
+
         while (true) {
             // Handle new command from challenger
             Command c = null;
@@ -104,8 +110,8 @@ public class GameThread extends Thread
                 System.out.println("new command from opponent");
                 handleOpponentCommand(o);
             }
-            
-            
+
+
             // Should I stay or should I go?
             synchronized (this) {
                 if (this.die) {
@@ -113,8 +119,8 @@ public class GameThread extends Thread
                     break;
                 }
             }
-            
-            
+
+
             // Wait for next input on queues
             synchronized (this) {
                 try {
@@ -125,44 +131,60 @@ public class GameThread extends Thread
                 }
             }
         }
-        
+
         System.out.println("GameThread is shutting down ...");
     }
 
-    
-    
+
+
     private void handleChallengerCommand(Command cmd)
     {
+        System.out.println("handle challenger command");
         if (cmd instanceof LeaveGame) {
-            // Challenger wants to leave the game
-            System.out.println("Challenger left the game");
-            
-            
-            // Inform challenger player thread
-            this.challengerThread.getMailbox().add(new Rpl_Leftgame());
-            
-            
-            // Set die flag and inform thread
-            synchronized (this) {
-                System.out.println("going to wake up");
-                this.die = true;
-                notifyAll();
+            // Challenger leaves
+            this.challengerThread.deliverGame(new Rpl_Leftgame());
+
+
+            // Opponent wins
+            if (this.opponentThread != null) {
+                this.opponentThread.deliverGame(new OpponentLeft());
+                this.opponentThread.deliverGame(new Victory());
             }
+            
+            
+            // End run loop
+            this.die = true;
         }
     }
-    
-    
-    
+
+
+
     private void handleOpponentCommand(Command cmd)
     {
-        // To Do: Implement handler
-    }
+        System.out.println("handle opponent command");
+        if (cmd instanceof LeaveGame) {
+            // Opponent leaves
+            this.opponentThread.deliverGame(new Rpl_Leftgame());
 
-    
-    
-    
-//    public static void main(String[] args) throws InterruptedException
-//    {
-//        System.out.println("Testing GameThread");
-//    }
+
+            // Challenger wins
+            this.challengerThread.deliverGame(new OpponentLeft());
+            this.challengerThread.deliverGame(new Victory());
+            
+            
+            // End run loop
+            this.die = true;
+        }
+
+
+        if (cmd instanceof JoinGame) {
+            // Opponent joins
+            this.opponentThread.deliverGame(new Rpl_Joinedgame());
+
+
+            // Inform challenger and opponent
+            this.challengerThread.deliverGame(new GameStart());
+            this.opponentThread.deliverGame(new GameStart());
+        }
+    }
 }

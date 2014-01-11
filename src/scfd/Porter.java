@@ -50,7 +50,6 @@ public class Porter extends Thread
         System.out.println("Porter running");
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             String line;
 
             
@@ -78,10 +77,6 @@ public class Porter extends Thread
 
                                 // Run playerThread
                                 Server.pool.execute(playerThread);
-                                
-                                
-                                // Send ack for client
-                                sendResponse(socket, new Rpl_Serverhello());
                             } else {
                                 // Send error nickname in use
                                 sendResponse(socket, new Err_Nicknameinuse());
