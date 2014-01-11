@@ -3,8 +3,12 @@ package scfd;
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import scf.model.Player;
 import scf.model.command.*;
+import scf.model.command.response.Rpl_Gamecreated;
+import scf.model.command.response.Rpl_Joinedgame;
 
 public class PlayerThread extends Thread
 {
@@ -14,7 +18,7 @@ public class PlayerThread extends Thread
     private GameThread gameThread;
     private final ConcurrentLinkedQueue<Command> porterMailbox;
     private final ConcurrentLinkedQueue<Command> gameMailbox;
-    private PrintWriter out;
+    private DataOutputStream out;
 
 
 
@@ -66,7 +70,7 @@ public class PlayerThread extends Thread
         
         // Set up read and write streams
         try {
-            this.out = new PrintWriter(socket.getOutputStream(), true);
+            this.out = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             System.out.println("Corrupted socket");
         }
@@ -117,7 +121,11 @@ public class PlayerThread extends Thread
     
     public void sendResponse(Command cmd)
     {
-        out.print(cmd.toString() + "\n");
+        try {
+            out.writeBytes(cmd.toString() + "\n");
+        } catch (IOException ex) {
+            Logger.getLogger(PlayerThread.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     
@@ -125,17 +133,17 @@ public class PlayerThread extends Thread
     public void handlePorterCommand(Command command)
     {
         System.out.println("handlePorterCommand");
-//        if (command instanceof CreateGame) {
-//            handlePorterCommand((CreateGame)command);
-//        }
-//        
-//        if (command instanceof JoinGame) {
-//            handlePorterCommand((JoinGame)command);
-//        } 
-//        
-//        if (command instanceof LeaveGame) {
-//            handlePorterCommand((LeaveGame)command);
-//        }
+        if (command instanceof CreateGame) {
+            handlePorterCommand((CreateGame)command);
+        }
+        
+        if (command instanceof JoinGame) {
+            handlePorterCommand((JoinGame)command);
+        } 
+        
+        if (command instanceof LeaveGame) {
+            handlePorterCommand((LeaveGame)command);
+        }
     }
     
     
@@ -146,6 +154,7 @@ public class PlayerThread extends Thread
         this.gameThread = new GameThread(this);
         System.out.println("New game created with gameID: " + this.gameThread.getGameID());
         
+        sendResponse(new Rpl_Gamecreated());
         
         // Save gameThread for future joins
         GameThreadMap.getInstance().put(gameThread.getGameID(), gameThread);
@@ -159,6 +168,9 @@ public class PlayerThread extends Thread
         String gid = command.getGameId();
         this.gameThread = GameThreadMap.getInstance().get(gid);
         this.gameThread.joinGame(this);
+        
+        sendResponse(new Rpl_Joinedgame());
+        
     }
     
     

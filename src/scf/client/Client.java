@@ -74,9 +74,9 @@ public class Client
                 String reconnect = scanner.next();
                 
                 if (reconnect.equals("y")) {
-                    response = sendCommand(new Reconnect(username));
+                    response = sendCommandAndWaitForResponse(new Reconnect(username));
                 } else {
-                    response = sendCommand(new ClientHello(username)); 
+                    response = sendCommandAndWaitForResponse(new ClientHello(username)); 
                 }
 
                 
@@ -95,8 +95,7 @@ public class Client
                         quitFlag = true;
                     } else {
                         try {
-                            sendCommand(Parser.parse(userCommand));
-
+                            sendCommandAndWaitForResponse(Parser.parse(userCommand));
 
                             //String modifiedSentence = inFromServer.readLine();
                             //System.out.println("FROM SERVER: " + modifiedSentence);
@@ -105,7 +104,6 @@ public class Client
                             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-
 
                 }
 
@@ -121,13 +119,16 @@ public class Client
 
 
 
-    private Command sendCommand(Command cmd)
+    private Command sendCommandAndWaitForResponse(Command cmd)
     {
         Command response = null;
         String line = "";
         try {
             outToServer.writeBytes(cmd.toString() + "\n");
+            
+            System.out.println("Waiting for server response...");
             line = inFromServer.readLine();
+            
             System.out.println(line);
             response = Parser.parse(line);
         } catch (IOException ex) {
