@@ -1,5 +1,6 @@
 package scf.parser;
 
+import scf.model.Board;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
 import scf.model.command.CreateGame;
@@ -37,6 +38,8 @@ import scf.parser.exception.ParserIllegalColumnException;
 import scf.parser.exception.ParserIllegalPlayerNameException;
 import scf.parser.exception.ParserInvalidParamsException;
 
+
+
 /**
  *
  * @author Ferdinand Sauer
@@ -44,230 +47,291 @@ import scf.parser.exception.ParserInvalidParamsException;
 public class Parser
 {
 
-	public static Command parse(String toParse) throws ParserException
-	{
-		if (toParse == null) {
-			throw new IllegalArgumentException("The String to parse may not be null!");
-		}
+    private static final String PARSE_ERR_PLAYERID = "PlayerID is either too long or to short.";
+    private static final String PARSE_ERR_PARAM_1 = " requires exactly one parameter.";
+    private static final String PARSE_ERR_PARAM_2 = " requires exactly two parameters.";
+    private static final String PARSE_ERR_PARAM_3 = " requires exactly three parameters.";
 
-		// Some preparations
-		String[] message = toParse.trim().split(" ");
 
-		if (message.length <= 0) {
-			throw new IllegalArgumentException("The String to parse may not be empty!");
-		}
 
-		Command cmd = null;
+    public static Command parse(String toParse) throws ParserException
+    {
+        if (toParse == null) {
+            throw new IllegalArgumentException("The String to parse may not be null!");
+        }
 
-		switch (message[0].toUpperCase()) {
+        // Some preparations
+        String[] message = toParse.trim().split(" ");
 
-			// Commands recievable by servers
-			case ClientHello.NAME:
+        if (message.length <= 0) {
+            throw new IllegalArgumentException("The String to parse may not be empty!");
+        }
+
+        Command cmd = null;
+
+        switch (message[0].toUpperCase()) {
+
+            // Commands recievable by servers
+            case ClientHello.NAME:
                 if (message.length == 2) {
                     String playerID = message[1];
-                    
+
                     if (playerID.length() >= 2 && playerID.length() <= 30) {
                         cmd = new ClientHello(playerID);
                     } else {
-                        throw new ParserIllegalPlayerNameException("PlayerID is either too long or to short.");
+                        throw new ParserIllegalPlayerNameException(PARSE_ERR_PLAYERID);
                     }
                 } else {
-                    throw new ParserInvalidParamsException("ClientHello requires exactly one parameter.");
-                } 
-				
-				break;
+                    throw new ParserInvalidParamsException("ClientHello " + PARSE_ERR_PARAM_1);
+                }
 
-			case GetGames.NAME:
-				cmd = new GetGames();
-				break;
+                break;
 
-			case JoinGame.NAME:
+            case GetGames.NAME:
+                cmd = new GetGames();
+                break;
+
+            case JoinGame.NAME:
                 if (message.length == 2) {
                     cmd = new JoinGame(message[1]);
                 } else {
-                    throw new ParserInvalidParamsException("JoinGame requires exactly one parameter.");
+                    throw new ParserInvalidParamsException("JoinGame " + PARSE_ERR_PARAM_1);
                 }
-				
-				break;
 
-			case CreateGame.NAME:
-				cmd = new CreateGame();
-				break;
+                break;
 
-			case PlaceDisc.NAME:
+            case CreateGame.NAME:
+                cmd = new CreateGame();
+                break;
+
+            case PlaceDisc.NAME:
                 if (message.length == 2) {
                     Integer column = Integer.parseInt(message[1]);
-                    
+
                     if (column > 0 && column <= 6) {
                         cmd = new PlaceDisc(column);
                     } else {
                         throw new ParserIllegalColumnException("The column must be an integer value between 0 and 6.");
                     }
                 } else {
-                    throw new ParserInvalidParamsException("PlaceDisc requires exactly one parameter.");
+                    throw new ParserInvalidParamsException("PlaceDisc " + PARSE_ERR_PARAM_1);
                 }
-				
-				break;
 
-			case LeaveGame.NAME:
-				cmd = new LeaveGame();
-				break;
+                break;
 
-			case Reconnect.NAME:
-				if (message.length == 2) {
+            case LeaveGame.NAME:
+                cmd = new LeaveGame();
+                break;
+
+            case Reconnect.NAME:
+                if (message.length == 2) {
                     String playerID = message[1];
-                    
-                    if (playerID.length() >= 2 && playerID.length() <= 30) {
+
+                    if (playerIdMatchesRequirements(playerID)) {
                         cmd = new Reconnect(playerID);
                     } else {
-                        throw new ParserIllegalPlayerNameException("PlayerID is either too short or too long.");
+                        throw new ParserIllegalPlayerNameException(PARSE_ERR_PLAYERID);
                     }
                 } else {
-                    throw new ParserInvalidParamsException("Reconnect requires exactly one parameter.");
+                    throw new ParserInvalidParamsException("Reconnect " + PARSE_ERR_PARAM_1);
                 }
-				
-				break;
 
-			case Pong.NAME:
-				cmd = new Pong();
-				break;
+                break;
 
-			// Commands recievable by clients
-			case GamesList.NAME:
-				cmd = new GamesList();
-				break;
+            case Pong.NAME:
+                cmd = new Pong();
+                break;
 
-			case GameStart.NAME:
-				cmd = new GameStart();
-				break;
+            // Commands recievable by clients
+            case GamesList.NAME:
+                cmd = new GamesList();
+                break;
 
-			case MoveResult.NAME:
-				cmd = new MoveResult();
-				break;
+            case GameStart.NAME:
+                cmd = new GameStart();
+                break;
 
-			case Victory.NAME:
-				cmd = new Victory();
-				break;
+            case MoveResult.NAME:
+                if (message.length != 3) {
+                    throw new ParserInvalidParamsException("MoveResult " + PARSE_ERR_PARAM_2);
+                }
+                String board = message[1];
+                String playerWithToken = message[2];
+                if (!playerIdMatchesRequirements(playerWithToken)) {
+                    throw new ParserIllegalPlayerNameException(PARSE_ERR_PLAYERID);
+                }
+                cmd = new MoveResult(parseBoardString(board), playerWithToken);
+                break;
 
-			case Ping.NAME:
-				cmd = new Ping();
-				break;
+            case Victory.NAME:
+                cmd = new Victory();
+                break;
 
-			case OpponentLeft.NAME:
-				cmd = new OpponentLeft();
-				break;
+            case Ping.NAME:
+                cmd = new Ping();
+                break;
 
-			// Replies
-			case "RESPONSE":
-				if (message.length <= 1) {
-					throw new IllegalArgumentException("The response number must be specidified"); // TODO No exception but error?
-				}
-				cmd = getReply(message[1]);
-				break;
+            case OpponentLeft.NAME:
+                cmd = new OpponentLeft();
+                break;
 
-			// Errors
-			case "ERROR":
-				if (message.length <= 1) {
-					throw new IllegalArgumentException("The error number must be specidified"); // TODO No exception but error?
-				}
-				cmd = getError(message[1]);
-				break;
+            // Replies
+            case "RESPONSE":
+                if (message.length <= 1) {
+                    throw new IllegalArgumentException("The response number must be specidified"); // TODO No exception but error?
+                }
+                cmd = getReply(message[1]);
+                break;
 
-			// No command could be parsed
-			default:
-				throw new ParserCommandNotFoundException("Command does not exist.");
-		}
+            // Errors
+            case "ERROR":
+                if (message.length <= 1) {
+                    throw new IllegalArgumentException("The error number must be specidified"); // TODO No exception but error?
+                }
+                cmd = getError(message[1]);
+                break;
 
-		return cmd;
-	}
+            // No command could be parsed
+            default:
+                throw new ParserCommandNotFoundException("This command does not exist.");
+        }
 
-	private static Command getReply(String rplNum)
-	{
-		Command cmd;
+        return cmd;
+    }
 
-		switch (rplNum) {
-			case Rpl_Serverhello.CODE:
-				cmd = new Rpl_Serverhello();
-				break;
 
-			case Rpl_Gamecreated.CODE:
-				cmd = new Rpl_Gamecreated();
-				break;
 
-			case Rpl_Joinedgame.CODE:
-				cmd = new Rpl_Joinedgame();
-				break;
+    private static Command getReply(String rplNum)
+    {
+        Command cmd;
 
-			case Rpl_Discplaced.CODE:
-				cmd = new Rpl_Discplaced();
-				break;
+        switch (rplNum) {
+            case Rpl_Serverhello.CODE:
+                cmd = new Rpl_Serverhello();
+                break;
 
-			case Rpl_Leftgame.CODE:
-				cmd = new Rpl_Leftgame();
-				break;
+            case Rpl_Gamecreated.CODE:
+                cmd = new Rpl_Gamecreated();
+                break;
 
-			case Rpl_Reconnected.CODE:
-				cmd = new Rpl_Reconnected();
-				break;
+            case Rpl_Joinedgame.CODE:
+                cmd = new Rpl_Joinedgame();
+                break;
 
-			default:
-				cmd = null;
-				break;
-		}
+            case Rpl_Discplaced.CODE:
+                cmd = new Rpl_Discplaced();
+                break;
 
-		return cmd;
-	}
+            case Rpl_Leftgame.CODE:
+                cmd = new Rpl_Leftgame();
+                break;
 
-	private static Command getError(String errNum)
-	{
-		Command cmd;
+            case Rpl_Reconnected.CODE:
+                cmd = new Rpl_Reconnected();
+                break;
 
-		switch (errNum) {
-			case Err_Badcommand.CODE:
-				cmd = new Err_Badcommand();
-				break;
+            default:
+                cmd = null;
+                break;
+        }
 
-			case "102":
-				cmd = new Err_Badsyntax();
-				break;
+        return cmd;
+    }
 
-			case Err_Badparams.CODE:
-				cmd = new Err_Badparams();
-				break;
 
-			case Err_Nicknameinuse.CODE:
-				cmd = new Err_Nicknameinuse();
-				break;
 
-			case Err_Nicknamenotvalid.CODE:
-				cmd = new Err_Nicknamenotvalid();
-				break;
+    private static Command getError(String errNum)
+    {
+        Command cmd;
 
-			case Err_Nosuchgame.CODE:
-				cmd = new Err_Nosuchgame();
-				break;
+        switch (errNum) {
+            case Err_Badcommand.CODE:
+                cmd = new Err_Badcommand();
+                break;
 
-			case Err_Gamefull.CODE:
-				cmd = new Err_Gamefull();
-				break;
+            case Err_Badsyntax.CODE:
+                cmd = new Err_Badsyntax();
+                break;
 
-			case Err_Badcolumn.CODE:
-				cmd = new Err_Badcolumn();
-				break;
+            case Err_Badparams.CODE:
+                cmd = new Err_Badparams();
+                break;
 
-			case Err_Unknownplayer.CODE:
-				cmd = new Err_Unknownplayer();
-				break;
+            case Err_Nicknameinuse.CODE:
+                cmd = new Err_Nicknameinuse();
+                break;
 
-			case Err_Playeralive.CODE:
-				cmd = new Err_Playeralive();
-				break;
+            case Err_Nicknamenotvalid.CODE:
+                cmd = new Err_Nicknamenotvalid();
+                break;
 
-			default:
-				cmd = null;
-				break;
-		}
-		
-		return cmd;
-	}
+            case Err_Nosuchgame.CODE:
+                cmd = new Err_Nosuchgame();
+                break;
+
+            case Err_Gamefull.CODE:
+                cmd = new Err_Gamefull();
+                break;
+
+            case Err_Badcolumn.CODE:
+                cmd = new Err_Badcolumn();
+                break;
+
+            case Err_Unknownplayer.CODE:
+                cmd = new Err_Unknownplayer();
+                break;
+
+            case Err_Playeralive.CODE:
+                cmd = new Err_Playeralive();
+                break;
+
+            default:
+                cmd = null;
+                break;
+        }
+
+        return cmd;
+    }
+
+
+
+    private static boolean playerIdMatchesRequirements(String playerID)
+    {
+        return playerID.length() >= 2 && playerID.length() <= 30;
+    }
+
+
+
+    private static String[][] parseBoardString(String board) throws ParserIllegalColumnException
+    {
+        // Separating rows
+        String[] rows = board.trim().split(",\\],\\[");
+
+        // Everything alright?
+        if (rows.length != Board.NUM_ROWS) {
+            throw new ParserIllegalColumnException("What is up with them rows?"); // TODO a new kind of exception
+        }
+
+        // Repair the mess of the first and last row
+        rows[0] = rows[0].replaceFirst("\\[\\[", "");
+        rows[Board.NUM_ROWS - 1] = rows[5].replaceFirst(",\\],\\]", ""); // Comma ftw -.-"
+
+        // Lets get them columns!
+        String[][] parsedBoard = new String[Board.NUM_ROWS][Board.NUM_COLUMNS];
+
+        for (int i = 0; i < Board.NUM_ROWS; ++i) {
+            String[] parsedRow = rows[i].split(",");
+
+            if (parsedRow.length != Board.NUM_COLUMNS) {
+                throw new ParserIllegalColumnException("What is up with them columns?"); // TODO a new kind of exception
+            }
+            
+            parsedBoard[i] = parsedRow;
+            
+        }
+
+        return parsedBoard;
+    }
 }
+
+

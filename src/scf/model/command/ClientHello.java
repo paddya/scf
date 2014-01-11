@@ -1,15 +1,19 @@
 package scf.model.command;
 
+
+
 /**
  *
  * @author Ferdinand Sauer
  */
 public class ClientHello extends Command
 {
-	
-	private String playerID;
+
+    private String playerID;
 
     public static final String NAME = "CLIENTHELLO";
+
+
 
     public ClientHello(String playerID)
     {
@@ -17,14 +21,20 @@ public class ClientHello extends Command
         protocolRepresentation = String.format("%s %s", NAME, playerID);
     }
 
-	public String getPlayerID()
-	{
-		return playerID;
-	}
 
-	public void setPlayerID(String playerID)
-	{
-		this.playerID = playerID;
-	}
+
+    public String getPlayerID()
+    {
+        return playerID;
+    }
+
+
+
+    public void setPlayerID(String playerID)
+    {
+        this.playerID = playerID;
+    }
 
 }
+
+

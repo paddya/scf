@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
+import scf.model.command.Reconnect;
 import scf.parser.Parser;
 import scf.parser.exception.ParserException;
 
@@ -22,20 +23,22 @@ import scf.parser.exception.ParserException;
  */
 public class Client
 {
-    
+
     private Socket clientSocket;
     private DataOutputStream outToServer;
     private BufferedReader inFromServer;
-    
-    
+
+
+
     public static void main(String[] args)
     {
-        
+
         Client client = new Client();
-        
+
         client.run();
 
     }
+
 
 
     public void run()
@@ -50,40 +53,64 @@ public class Client
             System.out.print("Port: ");
 
             Integer port = scanner.nextInt();
-            
-            
+
+
             System.out.println(String.format("Connecting to %s on port %d.", ip, port));
 
             clientSocket = new Socket(ip, port);
 
             outToServer = new DataOutputStream(clientSocket.getOutputStream());
             inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            
+
             Command response;
-            
+
             do {
                 System.out.print("Username: ");
 
                 String username = scanner.next();
+                
+                System.out.print("Reconnect? ");
+                
+                String reconnect = scanner.next();
+                
+                if (reconnect.equals("y")) {
+                    response = sendCommand(new Reconnect(username));
+                } else {
+                    response = sendCommand(new ClientHello(username)); 
+                }
 
-                response = sendCommand(new ClientHello(username));
-            } while(response instanceof scf.model.command.error.Error);
-            
-            
-            
+                
+            } while (response instanceof scf.model.command.error.Error);
+
+
+
             boolean quitFlag = false;
-            
+
             while (!quitFlag) {
                 if (scanner.hasNext()) {
-                    
-                    String sentence = scanner.next();
-                    outToServer.writeBytes(sentence + "\n");
-                    //String modifiedSentence = inFromServer.readLine();
-                    //System.out.println("FROM SERVER: " + modifiedSentence);
+
+                    String userCommand = scanner.next();
+
+                    if (userCommand.equals("exit")) {
+                        quitFlag = true;
+                    } else {
+                        try {
+                            sendCommand(Parser.parse(userCommand));
+
+
+                            //String modifiedSentence = inFromServer.readLine();
+                            //System.out.println("FROM SERVER: " + modifiedSentence);
+                        } catch (ParserException ex) {
+                            System.out.println("Invalid command!");
+                            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+
+
                 }
 
             }
-            
+
             clientSocket.close();
         } catch (UnknownHostException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
@@ -91,7 +118,9 @@ public class Client
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
+
+
     private Command sendCommand(Command cmd)
     {
         Command response = null;
@@ -107,11 +136,9 @@ public class Client
             System.out.println("Response from server could not be parsed.");
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, "Message from server: " + line, ex);
         }
-        
+
         return response;
     }
-    
-    
 }
 
 

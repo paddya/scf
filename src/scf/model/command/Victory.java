@@ -1,5 +1,6 @@
-
 package scf.model.command;
+
+
 
 /**
  *
@@ -10,8 +11,12 @@ public class Victory extends Command
 
     public static final String NAME = "VICTORY";
 
+
+
     public Victory()
     {
         protocolRepresentation = NAME + " "; // + args and/or something
     }
 }
+
+

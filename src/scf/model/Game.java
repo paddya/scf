@@ -1,8 +1,12 @@
 package scf.model;
 
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
+import static scf.model.Board.NUM_COLUMNS;
+import static scf.model.Board.NUM_ROWS;
+import scf.util.StringUtil;
+
+
 
 /**
  *
@@ -15,35 +19,56 @@ public class Game
     private Player challenger;
     private Player opponent;
 
+
+
+    public Game()
+    {
+        this.board = new Board();
+    }
+
+    
+
     public Board getBoard()
     {
         return board;
     }
+
+
 
     public void setBoard(Board board)
     {
         this.board = board;
     }
 
+
+
     public Player getChallenger()
     {
         return challenger;
     }
+
+
 
     public void setChallenger(Player challenger)
     {
         this.challenger = challenger;
     }
 
+
+
     public Player getOpponent()
     {
         return opponent;
     }
 
+
+
     public void setOpponent(Player opponent)
     {
         this.opponent = opponent;
     }
+
+
 
     public Player getWinner()
     {
@@ -66,9 +91,10 @@ public class Game
 
         }
 
-
         return null;
     }
+
+
 
     private Set<Player> scanColumns(Player[][] board)
     {
@@ -103,6 +129,8 @@ public class Game
 
     }
 
+
+
     private Set<Player> scanRows(Player[][] board)
     {
         HashSet<Player> winners = new HashSet<>();
@@ -136,6 +164,8 @@ public class Game
         return winners;
 
     }
+
+
 
     private Set<Player> scanDiagonals(Player[][] board)
     {
@@ -212,6 +242,79 @@ public class Game
 
         return winners;
     }
+
+
+
+    public Player[][] parseStringBoard(String[][] stringBoard)
+    {
+        // Everything correct?
+        if (stringBoard.length != Board.NUM_COLUMNS) {
+            throw new IllegalArgumentException("Board out of bounds (columns)");
+        }
+        for (int i = 0; i < Board.NUM_COLUMNS; ++i) {
+            if (stringBoard[i].length != Board.NUM_ROWS) {
+                throw new IllegalArgumentException("Board out of bounds (column " + i + ")");
+            }
+        }
+
+        // Everything correct! Lets get this party started.
+        Player[][] playerBoard = new Player[Board.NUM_COLUMNS][Board.NUM_ROWS];
+
+        for (int column = 0; column < Board.NUM_COLUMNS; ++column) {
+            for (int row = 0; row < Board.NUM_ROWS; ++row) {
+                switch (stringBoard[column][row].toLowerCase()) {
+                    case "x":
+                        playerBoard[column][row] = challenger;
+                        break;
+                    case "o":
+                        playerBoard[column][row] = opponent;
+                        break;
+                    case "_":
+                        playerBoard[column][row] = null; // Just for readability
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknown symbol on board: " + stringBoard[column][row]);
+                }
+            }
+        }
+
+        return playerBoard;
+    }
+    
+    /**
+     * Returns the board as an array of "x", "o" and "_".
+     * 
+     * @return 
+     */
+    public String[][] getStringBoard()
+    {
+
+        String[][] translatedBoard = new String[NUM_ROWS][NUM_COLUMNS];
+        
+        Player[][] boardArray = board.getBoard();
+        
+        for (int col = 0; col < Board.NUM_COLUMNS; col++) {
+            for (int row = 0; row < Board.NUM_ROWS; row++) {
+                translatedBoard[row][col] = translateToSymbol(boardArray[col][row]);
+            }
+        }
+        
+        return translatedBoard;
+    }
+    
+    private String translateToSymbol(Player player)
+    {
+        if (player == null) {
+            return "_";
+        }
+        
+        return player == challenger ? "x" : "o";
+    }
+
+
+
+    
+    
 // TODO: Write a test instead of this
 //    public static void main(String[] args)
 //    {
@@ -250,3 +353,5 @@ public class Game
 //        
 //    }
 }
+
+
