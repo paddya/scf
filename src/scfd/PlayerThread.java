@@ -116,15 +116,19 @@ public class PlayerThread extends Thread
     {
         System.out.println("handlePorterCommand");
         if (command instanceof CreateGame) {
-            handlePorterCommand((CreateGame)command);
+            handlePorterCommand((CreateGame) command);
         }
         
         if (command instanceof JoinGame) {
-            handlePorterCommand((JoinGame)command);
+            handlePorterCommand((JoinGame) command);
         } 
         
         if (command instanceof LeaveGame) {
-            handlePorterCommand((LeaveGame)command);
+            handlePorterCommand((LeaveGame) command);
+        }
+        
+        if (command instanceof GetGames) {
+            handlePorterCommand((GetGames) command);
         }
     }
     
@@ -166,6 +170,14 @@ public class PlayerThread extends Thread
         // Inform game thread about leaving of this.player
         System.out.println("LEAVE GAME FROM PORTER");
         this.gameThread.leaveGame(this);
+    }
+    
+    
+    
+    public void handlePorterCommand(GetGames command) {
+        for (GameThreadMap.Entry<String, GameThread> game : GameThreadMap.getInstance().entrySet()) {
+            // GamesList object zusammenbauen
+        }
     }
     
     
