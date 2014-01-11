@@ -1,8 +1,10 @@
 package scf.model;
 
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
+import static scf.model.Board.NUM_COLUMNS;
+import static scf.model.Board.NUM_ROWS;
+import scf.util.StringUtil;
 
 
 
@@ -18,6 +20,13 @@ public class Game
     private Player opponent;
 
 
+
+    public Game()
+    {
+        this.board = new Board();
+    }
+
+    
 
     public Board getBoard()
     {
@@ -236,7 +245,7 @@ public class Game
 
 
 
-    public Player[][] parseBoardString(String[][] stringBoard)
+    public Player[][] parseStringBoard(String[][] stringBoard)
     {
         // Everything correct?
         if (stringBoard.length != Board.NUM_COLUMNS) {
@@ -271,6 +280,41 @@ public class Game
 
         return playerBoard;
     }
+    
+    /**
+     * Returns the board as an array of "x", "o" and "_".
+     * 
+     * @return 
+     */
+    public String[][] getStringBoard()
+    {
+
+        String[][] translatedBoard = new String[NUM_ROWS][NUM_COLUMNS];
+        
+        Player[][] boardArray = board.getBoard();
+        
+        for (int col = 0; col < Board.NUM_COLUMNS; col++) {
+            for (int row = 0; row < Board.NUM_ROWS; row++) {
+                translatedBoard[row][col] = translateToSymbol(boardArray[col][row]);
+            }
+        }
+        
+        return translatedBoard;
+    }
+    
+    private String translateToSymbol(Player player)
+    {
+        if (player == null) {
+            return "_";
+        }
+        
+        return player == challenger ? "x" : "o";
+    }
+
+
+
+    
+    
 // TODO: Write a test instead of this
 //    public static void main(String[] args)
 //    {

@@ -2,6 +2,8 @@ package scf.model.command;
 
 import java.util.Arrays;
 import java.util.Objects;
+import scf.model.Board;
+import scf.util.StringUtil;
 
 
 
@@ -29,6 +31,36 @@ public class MoveResult extends Command
         protocolRepresentation = NAME + " "; // + args and/or something
     }
 
+    public String getPlayerWithToken()
+    {
+        return playerWithToken;
+    }
+
+
+
+    public void setPlayerWithToken(String playerWithToken)
+    {
+        this.playerWithToken = playerWithToken;
+    }
+
+
+
+    public String[][] getBoard()
+    {
+        return board;
+    }
+
+
+
+    public void setBoard(String[][] board)
+    {
+        this.board = board;
+    }
+    
+    public String getBoardString()
+    {
+        return StringUtil.getStringBoardString(board);
+    }
 
 
     @Override

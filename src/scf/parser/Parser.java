@@ -317,7 +317,7 @@ public class Parser
         rows[Board.NUM_ROWS - 1] = rows[5].replaceFirst(",\\],\\]", ""); // Comma ftw -.-"
 
         // Lets get them columns!
-        String[][] parsedBoard = new String[Board.NUM_COLUMNS][Board.NUM_ROWS];
+        String[][] parsedBoard = new String[Board.NUM_ROWS][Board.NUM_COLUMNS];
 
         for (int i = 0; i < Board.NUM_ROWS; ++i) {
             String[] parsedRow = rows[i].split(",");
@@ -326,9 +326,7 @@ public class Parser
                 throw new ParserIllegalColumnException("What is up with them columns?"); // TODO a new kind of exception
             }
             
-            for (int k = 0; k < Board.NUM_COLUMNS; k++) {
-                parsedBoard[k][i] = parsedRow[k];
-            }
+            parsedBoard[i] = parsedRow;
             
         }
 
