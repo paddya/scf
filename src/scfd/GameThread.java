@@ -57,11 +57,7 @@ public class GameThread extends Thread
 
 
     public synchronized void joinGame(PlayerThread opponentThread)
-    {
-        // Remove game from open games list
-        GameThreadMap.getInstance().remove(this.gameID);
-        
-        
+    {   
         this.opponentThread = opponentThread;
         this.opponentMailbox.add(new JoinGame(this.gameID));
         
@@ -72,6 +68,10 @@ public class GameThread extends Thread
 
     public synchronized void leaveGame(PlayerThread leavingThread)
     {
+        // Remove game from games list
+        GameThreadMap.getInstance().remove(this.gameID);
+        
+        
         if (leavingThread.equals(this.challengerThread)) {
             this.challengerMailbox.add(new LeaveGame());
         }
@@ -187,5 +187,19 @@ public class GameThread extends Thread
             this.challengerThread.deliverGame(new GameStart());
             this.opponentThread.deliverGame(new GameStart());
         }
+    }
+
+
+
+    public PlayerThread getChallengerThread()
+    {
+        return challengerThread;
+    }
+
+
+
+    public PlayerThread getOpponentThread()
+    {
+        return opponentThread;
     }
 }

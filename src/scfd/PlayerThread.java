@@ -175,9 +175,23 @@ public class PlayerThread extends Thread
     
     
     public void handlePorterCommand(GetGames command) {
+        System.out.println("player thread GETGAMES");
+        GamesList list = new GamesList();
+        
         for (GameThreadMap.Entry<String, GameThread> game : GameThreadMap.getInstance().entrySet()) {
-            // GamesList object zusammenbauen
+            String challenger = game.getValue().getChallengerThread().getPlayer().getName();
+            String opponent;
+            
+            try {
+                opponent = game.getValue().getOpponentThread().getPlayer().getName();
+            } catch (NullPointerException e) {
+                opponent = "";
+            }
+            
+            list.addGame(game.getKey(), challenger, opponent);
         }
+        
+        sendResponse(list);
     }
     
     
