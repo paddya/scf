@@ -160,7 +160,7 @@ public class Parser
                 if (!playerIdMatchesRequirements(playerWithToken)) {
                     throw new ParserIllegalPlayerNameException(PARSE_ERR_PLAYERID);
                 }
-                cmd = new MoveResult(preparseBoard(board), playerWithToken);
+                cmd = new MoveResult(parseBoardString(board), playerWithToken);
                 break;
 
             case Victory.NAME:
@@ -302,7 +302,7 @@ public class Parser
 
 
 
-    private static String[][] preparseBoard(String board) throws ParserIllegalColumnException
+    private static String[][] parseBoardString(String board) throws ParserIllegalColumnException
     {
         // Separating rows
         String[] rows = board.trim().split(",\\],\\[");
@@ -314,7 +314,7 @@ public class Parser
 
         // Repair the mess of the first and last row
         rows[0] = rows[0].replaceFirst("\\[\\[", "");
-        rows[5] = rows[5].replaceFirst(",\\],\\]", ""); // Comma ftw -.-"
+        rows[Board.NUM_ROWS - 1] = rows[5].replaceFirst(",\\],\\]", ""); // Comma ftw -.-"
 
         // Lets get them columns!
         String[][] parsedBoard = new String[Board.NUM_COLUMNS][Board.NUM_ROWS];
