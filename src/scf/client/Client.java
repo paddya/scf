@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import scf.model.command.ClientHello;
@@ -21,26 +22,28 @@ import scf.parser.exception.ParserException;
  *
  * @author paddya
  */
-public class Client
+public class Client extends Thread
 {
 
     private Socket clientSocket;
     private DataOutputStream outToServer;
     private BufferedReader inFromServer;
 
-
+    private Thread handlerThread;
+    private ConcurrentLinkedQueue<Command> mailbox = new ConcurrentLinkedQueue<>();
 
     public static void main(String[] args)
     {
 
         Client client = new Client();
 
-        client.run();
+        client.start();
 
     }
 
 
-
+    
+    @Override
     public void run()
     {
         try {
@@ -62,6 +65,12 @@ public class Client
             outToServer = new DataOutputStream(clientSocket.getOutputStream());
             inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
+            ResponseHandler handler = new ResponseHandler(clientSocket, this);
+            
+            handlerThread = new Thread(handler);
+            
+            handlerThread.start();
+            
             Command response;
 
             do {
@@ -124,21 +133,40 @@ public class Client
         Command response = null;
         String line = "";
         try {
+            
             outToServer.writeBytes(cmd.toString() + "\n");
             
             System.out.println("Waiting for server response...");
-            line = inFromServer.readLine();
             
-            System.out.println(line);
-            response = Parser.parse(line);
+            synchronized (this) {
+                this.wait();
+            }
+            
+            return mailbox.peek();
+            
         } catch (IOException ex) {
             System.out.println("Something went wrong while trying to submit stuff to the server.");
-        } catch (ParserException ex) {
-            System.out.println("Response from server could not be parsed.");
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, "Message from server: " + line, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return response;
+    }
+    
+    private void sendCommandAsync(Command cmd)
+    {
+        try {
+            outToServer.writeBytes(cmd.toString() + "\n");
+            
+        } catch (IOException ex) {
+            System.out.println("Something went wrong while trying to submit stuff to the server.");
+        }
+    }
+    
+    public synchronized void handleResponse(Command cmd)
+    {
+        mailbox.add(cmd);
+        notifyAll();
     }
 }
 

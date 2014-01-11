@@ -13,12 +13,39 @@ package scf.parser.exception;
 public class ParserIllegalPlayerNameException extends ParserException
 {
 
-
-
-    public ParserIllegalPlayerNameException(String playerID_is_either_too_long_or_to_short)
+    public ParserIllegalPlayerNameException()
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+
+
+    public ParserIllegalPlayerNameException(String message)
+    {
+        super(message);
+    }
+
+
+
+    public ParserIllegalPlayerNameException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
+
+
+
+    public ParserIllegalPlayerNameException(Throwable cause)
+    {
+        super(cause);
+    }
+
+
+
+    public ParserIllegalPlayerNameException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
+    {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+
     
 }
 
