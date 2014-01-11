@@ -89,6 +89,7 @@ public class PlayerThread extends Thread
                         handleCommand(cmd);
                     } catch (ParserException ex) {
                         System.out.println("Parse exception");
+                        System.err.println(ex.getMessage());
                     }
                 } else {
                     // End of stream

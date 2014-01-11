@@ -17,7 +17,7 @@ public class Reconnect extends Command
     public Reconnect(String playerID)
     {
         this.playerID = playerID;
-        protocolRepresentation = NAME + " "; // + ...
+        protocolRepresentation = String.format("%s %s", NAME, playerID); // + ...
     }
 
 

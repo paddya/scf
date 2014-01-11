@@ -18,7 +18,7 @@ public class JoinGame extends Command
     public JoinGame(String gameId)
     {
         this.gameId = gameId;
-        protocolRepresentation = NAME + " "; // + ...
+        protocolRepresentation = String.format("%s %s", NAME, gameId); // + ...
     }
 
 
