@@ -305,7 +305,7 @@ public class Parser
     private static String[][] preparseBoard(String board) throws ParserIllegalColumnException
     {
         // Separating rows
-        String[] rows = board.trim().split(",],[");
+        String[] rows = board.trim().split(",\\],\\[");
 
         // Everything alright?
         if (rows.length != Board.NUM_ROWS) {
@@ -313,21 +313,26 @@ public class Parser
         }
 
         // Repair the mess of the first and last row
-        rows[0].replaceFirst("[[", "");
-        rows[5].replaceFirst(",],]", ""); // Comma ftw -.-"
+        rows[0] = rows[0].replaceFirst("\\[\\[", "");
+        rows[5] = rows[5].replaceFirst(",\\],\\]", ""); // Comma ftw -.-"
 
         // Lets get them columns!
-        String[][] columns = new String[6][];
+        String[][] parsedBoard = new String[Board.NUM_COLUMNS][Board.NUM_ROWS];
 
         for (int i = 0; i < Board.NUM_ROWS; ++i) {
-            columns[i] = rows[i].split(",");
+            String[] parsedRow = rows[i].split(",");
 
-            if (columns[i].length != Board.NUM_COLUMNS) {
+            if (parsedRow.length != Board.NUM_COLUMNS) {
                 throw new ParserIllegalColumnException("What is up with them columns?"); // TODO a new kind of exception
             }
+            
+            for (int k = 0; k < Board.NUM_COLUMNS; k++) {
+                parsedBoard[k][i] = parsedRow[k];
+            }
+            
         }
 
-        return columns;
+        return parsedBoard;
     }
 }
 
