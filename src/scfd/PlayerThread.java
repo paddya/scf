@@ -7,10 +7,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import scf.model.Player;
 import scf.model.command.*;
+<<<<<<< HEAD
 import scf.model.command.response.Rpl_Discplaced;
 import scf.model.command.response.Rpl_Gamecreated;
 import scf.model.command.response.Rpl_Leftgame;
 import scf.model.command.response.Rpl_Serverhello;
+=======
+import scf.model.command.response.Rpl_Gamecreated;
+import scf.model.command.response.Rpl_Joinedgame;
+>>>>>>> 1e355e344626b698b05a6ebb424487b4f4deb423
 
 public class PlayerThread extends Thread
 {
@@ -20,6 +25,10 @@ public class PlayerThread extends Thread
     private GameThread gameThread;
     private final ConcurrentLinkedQueue<Command> porterMailbox;
     private final ConcurrentLinkedQueue<Command> gameMailbox;
+<<<<<<< HEAD
+=======
+    private DataOutputStream out;
+>>>>>>> 1e355e344626b698b05a6ebb424487b4f4deb423
 
 
 
@@ -67,12 +76,6 @@ public class PlayerThread extends Thread
         
         // Set new socket
         this.socket = socket;
-        
-        
-        // Notify waiting thread
-//        synchronized (this) {
-//            notifyAll();
-//        }
     }
 
 
@@ -145,6 +148,7 @@ public class PlayerThread extends Thread
         this.gameThread = new GameThread(this);
         System.out.println("New game created with gameID: " + this.gameThread.getGameID());
         
+        sendResponse(new Rpl_Gamecreated());
         
         // Save gameThread for future joins
         GameThreadMap.getInstance().put(gameThread.getGameID(), gameThread);
@@ -166,6 +170,9 @@ public class PlayerThread extends Thread
         String gid = command.getGameId();
         this.gameThread = GameThreadMap.getInstance().get(gid);
         this.gameThread.joinGame(this);
+        
+        sendResponse(new Rpl_Joinedgame());
+        
     }
     
     
