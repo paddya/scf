@@ -161,8 +161,8 @@ public class GameThread extends Thread
     
     
     
-    public static void main(String[] args) throws InterruptedException
-    {
-        System.out.println("Testing GameThread");
-    }
+//    public static void main(String[] args) throws InterruptedException
+//    {
+//        System.out.println("Testing GameThread");
+//    }
 }

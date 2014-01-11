@@ -3,31 +3,44 @@ package scfd;
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import scf.model.Player;
 import scf.model.command.*;
-import scf.parser.Parser;
-import scf.parser.exception.ParserException;
 
 public class PlayerThread extends Thread
 {
 
     private Socket socket;
     private Player player;
-    private String game;
     private GameThread gameThread;
-    private final ConcurrentLinkedQueue<Command> mailbox;
-    private BufferedReader in;
+    private final ConcurrentLinkedQueue<Command> porterMailbox;
+    private final ConcurrentLinkedQueue<Command> gameMailbox;
     private PrintWriter out;
 
 
 
     public PlayerThread(Socket socket, String playerID)
     {
-        this.mailbox = new ConcurrentLinkedQueue<>();
+        this.porterMailbox = new ConcurrentLinkedQueue<>();
+        this.gameMailbox = new ConcurrentLinkedQueue<>();
         this.setSocket(socket);
-//         this.player = LOOKUP(playerID)
         this.player = new Player();
         this.player.setName(playerID);
+    }
+    
+    
+    
+    public synchronized void deliverPorter(Command cmd) {
+        this.porterMailbox.add(cmd);
+        notifyAll();
+    }
+    
+    
+    
+    public synchronized void deliverGame(Command cmd) {
+        this.gameMailbox.add(cmd);
+        notifyAll();
     }
     
     
@@ -55,7 +68,6 @@ public class PlayerThread extends Thread
         
         // Set up read and write streams
         try {
-            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.out = new PrintWriter(socket.getOutputStream(), true);
         } catch (IOException e) {
             System.out.println("Corrupted socket");
@@ -63,9 +75,9 @@ public class PlayerThread extends Thread
         
         
         // Notify waiting thread
-        synchronized (this) {
-            notifyAll();
-        }
+//        synchronized (this) {
+//            notifyAll();
+//        }
     }
 
 
@@ -73,28 +85,147 @@ public class PlayerThread extends Thread
     @Override
     public void run()
     {
+        System.out.println("player running");
+        
+        while (true) {
+            // Check porter mailbox
+            Command pcmd = this.porterMailbox.poll();
+            if (pcmd != null) {
+                handlePorterCommand(pcmd);
+            }
+
+
+            // Check game mailbox
+            Command gcmd = this.gameMailbox.poll();
+            if (gcmd != null) {
+                handleGameCommand(gcmd);
+            }
+
+
+            // Sleep like a baby]
+            try {
+                synchronized (this) {
+                    System.out.println("Waiting");
+                    wait();
+                }
+            } catch (InterruptedException ex) {
+                System.out.println("Interrupted");
+            }
+            
+            System.out.println("Waking up");
+            int a = 3+5;
+        }
+    }
+    
+    public void sendResponse(Command cmd)
+    {
+        out.print(cmd.toString() + "\n");
+    }
+    
+    
+    
+    public void handlePorterCommand(Command command)
+    {
+        System.out.println("handlePorterCommand");
+//        if (command instanceof CreateGame) {
+//            handlePorterCommand((CreateGame)command);
+//        }
+//        
+//        if (command instanceof JoinGame) {
+//            handlePorterCommand((JoinGame)command);
+//        } 
+//        
+//        if (command instanceof LeaveGame) {
+//            handlePorterCommand((LeaveGame)command);
+//        }
+    }
+    
+    
+    
+    public void handlePorterCommand(CreateGame command)
+    {
+        // Create new game thread
+        this.gameThread = new GameThread(this);
+        System.out.println("New game created with gameID: " + this.gameThread.getGameID());
+        
+        
+        // Save gameThread for future joins
+        GameThreadMap.getInstance().put(gameThread.getGameID(), gameThread);
+    }
+    
+    
+    
+    public void handlePorterCommand(JoinGame command)
+    {
+        // Join an existing game thread
+        String gid = command.getGameId();
+        this.gameThread = GameThreadMap.getInstance().get(gid);
+        this.gameThread.joinGame(this);
+    }
+    
+    
+    
+    public void handlePorterCommand(LeaveGame command)
+    {
+        // Inform game thread about leaving of this.player
+        this.gameThread.enqueue(command, this.player.getName());
+        
+        
+        // Handle the response
+//        Command res = this.gameThread.blockinglyDequeue(this.player.getName());
+    }
+    
+    
+    
+    public void handleGameCommand(Command command) {
+        
+    }
+
+
+
+    public Player getPlayer()
+    {
+        return player;
+    }
+
+
+
+    public ConcurrentLinkedQueue<Command> getMailbox()
+    {
+        return porterMailbox;
+    }
+}
+
+
+
+
+class SocketHandler extends Thread
+{
+    private Socket socket;
+    private PlayerThread playerThread;
+    
+    
+    public SocketHandler(PlayerThread playerThread)
+    {
+        this.playerThread = playerThread;
+    }
+
+
+    @Override
+    public void run()
+    {
         try {
-            // Read loop
-            String line;
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
             while (true) {
-                line = in.readLine();
-                
+                String line = in.readLine();
+
                 if (line != null) {
-                    System.out.println(this.player.getName() + "(" + Thread.currentThread().getId() + ") said: " + line);
-                    
-                    
-                    // Try to parse and handle the command
-                    try {
-                        Command cmd = Parser.parse(line);
-                        handleCommand(cmd);
-                    } catch (ParserException ex) {
-                        System.out.println("Parse exception");
-                    }
+                    this.playerThread.getMailbox();
                 } else {
                     // End of stream
-                    System.out.println(this.player.getName() + " disconnected");
                     this.socket.close();
-                    
+
                     // Wait until the same client reconnects
                     synchronized (this) {
                         try {
@@ -110,74 +241,4 @@ public class PlayerThread extends Thread
         }
     }
     
-    public void sendResponse(Command cmd)
-    {
-        out.print(cmd.toString() + "\n");
-    }
-    
-    
-    
-    public void handleCommand(Command command)
-    {
-        if (command instanceof CreateGame) {
-            handleCommand((CreateGame)command);
-        }
-        
-        if (command instanceof JoinGame) {
-            handleCommand((JoinGame)command);
-        }
-        
-        if (command instanceof LeaveGame) {
-            handleCommand((LeaveGame)command);
-        }
-    }
-    
-    
-    
-    public void handleCommand(CreateGame command)
-    {
-        // Create new game thread
-        this.gameThread = new GameThread(this);
-        System.out.println("New game created with gameID: " + this.gameThread.getGameID());
-        
-        
-        // Save gameThread for future joins
-        GameThreadMap.getInstance().put(gameThread.getGameID(), gameThread);
-    }
-    
-    
-    
-    public void handleCommand(JoinGame command)
-    {
-        // Join an existing game thread
-        String gid = command.getGameId();
-        this.gameThread = GameThreadMap.getInstance().get(gid);
-        this.gameThread.joinGame(this);
-    }
-    
-    
-    
-    public void handleCommand(LeaveGame command)
-    {
-        // Inform game thread about leaving of this.player
-        this.gameThread.enqueue(command, this.player.getName());
-        
-        
-        // Handle the response
-//        Command res = this.gameThread.blockinglyDequeue(this.player.getName());
-    }
-
-
-
-    public Player getPlayer()
-    {
-        return player;
-    }
-
-
-
-    public ConcurrentLinkedQueue<Command> getMailbox()
-    {
-        return mailbox;
-    }
 }
