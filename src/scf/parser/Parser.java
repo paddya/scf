@@ -108,7 +108,7 @@ public class Parser
                 if (message.length == 2) {
                     Integer column = Integer.parseInt(message[1]);
 
-                    if (column > 0 && column <= 6) {
+                    if (column >= 0 && column <= 6) {
                         cmd = new PlaceDisc(column);
                     } else {
                         throw new ParserIllegalColumnException("The column must be an integer value between 0 and 6.");

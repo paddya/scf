@@ -367,9 +367,14 @@ public class Game
 
 
 
-    public String getPlayerWithToken()
+    public Player getPlayerWithToken()
     {
-        return challenger.hasToken() ? challenger.getName() : opponent.getName();
+        return challenger.hasToken() ? challenger : opponent;
+    }
+    
+    public Player getPlayerWithoutToken()
+    {
+        return challenger.hasToken() ? opponent : challenger;
     }
 }
 

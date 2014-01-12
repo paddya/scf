@@ -4,8 +4,11 @@ import java.util.concurrent.*;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import scf.model.Board;
 import scf.model.Game;
+import scf.model.Player;
 import scf.model.command.*;
+import scf.model.command.response.Rpl_Discplaced;
 import scf.model.command.response.Rpl_Joinedgame;
 import scf.model.command.response.Rpl_Leftgame;
 
@@ -20,6 +23,10 @@ public class GameThread extends Thread
     private ConcurrentLinkedQueue<Command> challengerMailbox;
     private ConcurrentLinkedQueue<Command> opponentMailbox;
     private boolean die;
+    
+    // track moves of players
+    private PlaceDisc challengerMove;
+    private PlaceDisc opponentMove;;
 
 
 
@@ -30,7 +37,7 @@ public class GameThread extends Thread
     
     public String getPlayerWithToken()
     {
-        return this.game.getPlayerWithToken();
+        return this.game.getPlayerWithToken().getName();
     }
 
     private static String generateString(int length)
@@ -84,6 +91,19 @@ public class GameThread extends Thread
 
         if (leavingThread.equals(this.opponentThread)) {
             this.opponentMailbox.add(new LeaveGame());
+        }
+        
+        notifyAll();
+    }
+    
+    public synchronized void placeDisc(PlayerThread playerThread, int column)
+    {
+        if (playerThread.equals(this.challengerThread)) {
+            this.challengerMailbox.add(new PlaceDisc(column));
+        }
+
+        if (playerThread.equals(this.opponentThread)) {
+            this.opponentMailbox.add(new PlaceDisc(column));
         }
         
         notifyAll();
@@ -162,6 +182,11 @@ public class GameThread extends Thread
             // End run loop
             this.die = true;
         }
+        
+        if (cmd instanceof PlaceDisc) {
+            handleMove(this.challengerThread, (PlaceDisc) cmd);
+        }
+        
     }
 
 
@@ -199,8 +224,70 @@ public class GameThread extends Thread
 
 
             // Inform challenger and opponent
-            this.challengerThread.deliverGame(new GameStart(game.getPlayerWithToken()));
-            this.opponentThread.deliverGame(new GameStart(game.getPlayerWithToken()));
+            this.challengerThread.deliverGame(new GameStart(getPlayerWithToken()));
+            this.opponentThread.deliverGame(new GameStart(getPlayerWithToken()));
+        }
+        
+        if (cmd instanceof PlaceDisc) {
+            handleMove(this.opponentThread, (PlaceDisc) cmd);
+        }
+        
+    }
+    
+    public synchronized void handleMove(PlayerThread thread, PlaceDisc cmd)
+    {
+        if (thread == this.opponentThread) {
+            opponentMove = cmd;
+        }
+        
+        if (thread == this.challengerThread) {
+            challengerMove = cmd;
+        }
+        
+        thread.deliverGame(new Rpl_Discplaced());
+        
+        if (challengerMove != null && opponentMove != null) {
+            
+            Player challenger = game.getChallenger();
+            Player opponent = game.getOpponent();
+            
+            int firstMove = challenger.hasToken() ? challengerMove.getColumn() : opponentMove.getColumn();
+            int secondMove = challenger.hasToken() ? opponentMove.getColumn() : challengerMove.getColumn();
+            
+            Board board = game.getBoard();
+            
+            if (firstMove == secondMove) {
+                
+                // we don't have a problem with two free rows in a column
+                if (board.hasTwoFreeRowsInColumn(firstMove)) {
+                    board.insertIntoColumn(game.getPlayerWithToken(), firstMove);
+                    board.insertIntoColumn(game.getPlayerWithoutToken(), secondMove);
+                } else {
+                    board.insertIntoColumn(game.getPlayerWithToken(), firstMove);
+                    System.out.printf("%s's move was discarded.", game.getPlayerWithoutToken());
+                }
+                
+                // switch tokens, because the player with token had an advantage.
+                boolean challengerToken = challenger.hasToken();
+                
+                challenger.setToken(!challengerToken);
+                opponent.setToken(challengerToken);
+                
+            } else {
+                if (board.insertIntoColumn(game.getPlayerWithToken(), firstMove)) {
+                    System.out.printf("%s's move was successful.", game.getPlayerWithToken().getName());
+                }
+                if (board.insertIntoColumn(game.getPlayerWithoutToken(), secondMove)) {
+                    System.out.printf("%s's move was successful.", game.getPlayerWithoutToken().getName());
+                }
+            }
+            
+            challengerThread.deliverGame(new MoveResult(game.getStringBoard(), getPlayerWithToken()));
+            opponentThread.deliverGame(new MoveResult(game.getStringBoard(), getPlayerWithToken()));
+            
+            challengerMove = null;
+            opponentMove = null;
+            
         }
     }
 

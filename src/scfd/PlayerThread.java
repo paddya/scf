@@ -130,6 +130,10 @@ public class PlayerThread extends Thread
         if (command instanceof GetGames) {
             handlePorterCommand((GetGames) command);
         }
+        
+        if (command instanceof PlaceDisc) {
+            handlePorterCommand((PlaceDisc) command);
+        }
     }
     
     
@@ -174,7 +178,8 @@ public class PlayerThread extends Thread
     
     
     
-    public void handlePorterCommand(GetGames command) {
+    public void handlePorterCommand(GetGames command)
+    {
         System.out.println("player thread GETGAMES");
         GamesList list = new GamesList();
         
@@ -192,6 +197,12 @@ public class PlayerThread extends Thread
         }
         
         sendResponse(list);
+    }
+    
+    public void handlePorterCommand(PlaceDisc command)
+    {
+        System.out.println("player thread PLACEDISC");
+        this.gameThread.placeDisc(this, command.getColumn());
     }
     
     

@@ -63,6 +63,16 @@ public class MoveResult extends Command
     }
 
 
+
+    @Override
+    public String toString()
+    {
+        return String.format("%s %s %s", NAME, getBoardString(), playerWithToken);
+    }
+
+    
+    
+
     @Override
     public int hashCode()
     {
