@@ -148,7 +148,12 @@ public class Parser
                 break;
 
             case GameStart.NAME:
-                cmd = new GameStart();
+                if (message.length == 2) {
+                    cmd = new GameStart(message[1]);
+                } else {
+                    throw new ParserInvalidParamsException("Reconnect " + PARSE_ERR_PARAM_1);
+                }
+                
                 break;
 
             case MoveResult.NAME:

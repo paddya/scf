@@ -11,12 +11,29 @@ public class GameStart extends Command
 
     public static final String NAME = "GAMESTART";
 
+    public String playerWithToken;
 
-
-    public GameStart()
+    public GameStart(String playerWithToken)
     {
-        protocolRepresentation = NAME + " "; // + args and/or something
+        this.playerWithToken = playerWithToken;
+        protocolRepresentation = NAME + " " + playerWithToken; // + args and/or something
     }
+
+
+
+    public String getPlayerWithToken()
+    {
+        return playerWithToken;
+    }
+
+
+
+    public void setPlayerWithToken(String playerWithToken)
+    {
+        this.playerWithToken = playerWithToken;
+    }
+    
+    
 }
 
 

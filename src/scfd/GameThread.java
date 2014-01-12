@@ -4,8 +4,8 @@ import java.util.concurrent.*;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import scf.model.Game;
 import scf.model.command.*;
-import scf.model.command.response.Rpl_Gamecreated;
 import scf.model.command.response.Rpl_Joinedgame;
 import scf.model.command.response.Rpl_Leftgame;
 
@@ -14,7 +14,7 @@ import scf.model.command.response.Rpl_Leftgame;
 public class GameThread extends Thread
 {
 
-    private String gameID;
+    private Game game;
     private PlayerThread challengerThread;
     private PlayerThread opponentThread;
     private ConcurrentLinkedQueue<Command> challengerMailbox;
@@ -25,10 +25,13 @@ public class GameThread extends Thread
 
     public String getGameID()
     {
-        return this.gameID;
+        return this.game.getId();
     }
-
-
+    
+    public String getPlayerWithToken()
+    {
+        return this.game.getPlayerWithToken();
+    }
 
     private static String generateString(int length)
     {
@@ -48,7 +51,9 @@ public class GameThread extends Thread
     public GameThread(PlayerThread challengerThread)
     {
         this.die = false;
-        this.gameID = generateString(32);
+        this.game = new Game();
+        this.game.setId(generateString(32));
+        this.game.setChallenger(challengerThread.getPlayer());
         this.challengerThread = challengerThread;
         this.challengerMailbox = new ConcurrentLinkedQueue<>();
         this.opponentMailbox = new ConcurrentLinkedQueue<>();
@@ -59,7 +64,8 @@ public class GameThread extends Thread
     public synchronized void joinGame(PlayerThread opponentThread)
     {   
         this.opponentThread = opponentThread;
-        this.opponentMailbox.add(new JoinGame(this.gameID));
+        this.game.setOpponent(opponentThread.getPlayer());
+        this.opponentMailbox.add(new JoinGame(this.getGameID()));
         
         notifyAll();
     }
@@ -69,7 +75,7 @@ public class GameThread extends Thread
     public synchronized void leaveGame(PlayerThread leavingThread)
     {
         // Remove game from games list
-        GameThreadMap.getInstance().remove(this.gameID);
+        GameThreadMap.getInstance().remove(this.getGameID());
         
         
         if (leavingThread.equals(this.challengerThread)) {
@@ -179,13 +185,22 @@ public class GameThread extends Thread
 
 
         if (cmd instanceof JoinGame) {
+            
+            Random rand = new Random();
+            
+            boolean challengerToken = rand.nextInt(2) == 0;
+            
+            this.game.getChallenger().setToken(challengerToken);
+            this.game.getOpponent().setToken(!challengerToken);
+            
+            
             // Opponent joins
             this.opponentThread.deliverGame(new Rpl_Joinedgame());
 
 
             // Inform challenger and opponent
-            this.challengerThread.deliverGame(new GameStart());
-            this.opponentThread.deliverGame(new GameStart());
+            this.challengerThread.deliverGame(new GameStart(game.getPlayerWithToken()));
+            this.opponentThread.deliverGame(new GameStart(game.getPlayerWithToken()));
         }
     }
 

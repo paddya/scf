@@ -14,7 +14,7 @@ import scf.util.StringUtil;
  */
 public class Game
 {
-
+    private String id;
     private Board board;
     private Player challenger;
     private Player opponent;
@@ -26,8 +26,20 @@ public class Game
         this.board = new Board();
     }
 
-    
 
+
+    public String getId()
+    {
+        return id;
+    }
+
+
+
+    public void setId(String id)
+    {
+        this.id = id;
+    }
+    
     public Board getBoard()
     {
         return board;
@@ -352,6 +364,13 @@ public class Game
 //        System.out.println(game.getWinner().getName());
 //        
 //    }
+
+
+
+    public String getPlayerWithToken()
+    {
+        return challenger.hasToken() ? challenger.getName() : opponent.getName();
+    }
 }
 
 
