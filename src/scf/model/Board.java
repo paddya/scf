@@ -70,6 +70,18 @@ public class Board
     {
         return hasFreeRowInColumn(column) && (getNextFreeRowInColumn(column) + 2) < NUM_ROWS;
     }
+    
+    
+    
+    public boolean isSaturated() {
+        for (int i = 0; i < NUM_COLUMNS; i++) {
+            if (hasFreeRowInColumn(i)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
 
 
 

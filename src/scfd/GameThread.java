@@ -219,6 +219,11 @@ public class GameThread extends Thread
 
 
         if (cmd instanceof JoinGame) {
+            if (this.opponentThread != null) {
+                // Game is already going
+                // To do: inform client
+                return;
+            }
 
             Random rand = new Random();
 
@@ -312,9 +317,20 @@ public class GameThread extends Thread
                     v = new Victory(opponentThread.getPlayer().getName());
                 }
                 
+                
                 // Inform both
                 challengerThread.deliverGame(v);
                 opponentThread.deliverGame(v);
+            } else {
+                if (game.getBoard().isSaturated()) {
+                    // Draw
+                    Victory v = new Victory("");
+                    
+                    
+                    // Inform both
+                    challengerThread.deliverGame(v);
+                    opponentThread.deliverGame(v);
+                }
             }
             
 
