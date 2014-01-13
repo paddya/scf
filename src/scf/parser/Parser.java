@@ -169,7 +169,14 @@ public class Parser
                 break;
 
             case Victory.NAME:
-                cmd = new Victory();
+                if (message.length != 2) {
+                    throw new ParserInvalidParamsException("MoveResult " + PARSE_ERR_PARAM_1);
+                }
+                String winner = message[1];
+                if (!playerIdMatchesRequirements(winner)) {
+                    throw new ParserIllegalPlayerNameException(PARSE_ERR_PLAYERID);
+                }
+                cmd = new Victory(winner);
                 break;
 
             case Ping.NAME:

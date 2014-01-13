@@ -1,5 +1,9 @@
 package scf.model.command;
 
+import scf.model.Player;
+
+
+
 
 
 /**
@@ -10,12 +14,14 @@ public class Victory extends Command
 {
 
     public static final String NAME = "VICTORY";
+    private String winner;
 
 
 
-    public Victory()
+    public Victory(String winner)
     {
-        protocolRepresentation = NAME + " "; // + args and/or something
+        this.winner = winner;
+        protocolRepresentation = NAME + " " + winner; // + args and/or something
     }
 }
 
