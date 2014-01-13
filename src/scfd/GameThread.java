@@ -18,14 +18,15 @@ public class GameThread extends Thread
 {
 
     private Game game;
-    private PlayerThread challengerThread;
-    private PlayerThread opponentThread;
+    private PlayerThread challengerThread = null;
+    private PlayerThread opponentThread = null;
     private ConcurrentLinkedQueue<Command> challengerMailbox;
     private ConcurrentLinkedQueue<Command> opponentMailbox;
     private boolean die;
     // track moves of players
     private PlaceDisc challengerMove;
     private PlaceDisc opponentMove;
+    private boolean over = false;
 
 
 
@@ -77,6 +78,11 @@ public class GameThread extends Thread
 
     public synchronized void joinGame(PlayerThread opponentThread)
     {
+        if (this.opponentThread != null) {
+            // Game is already running
+            // To do: inform client
+            return;
+        }
         this.opponentThread = opponentThread;
         this.game.setOpponent(opponentThread.getPlayer());
         this.opponentMailbox.add(new JoinGame(this.getGameID()));
@@ -184,7 +190,9 @@ public class GameThread extends Thread
             // Opponent wins
             if (this.opponentThread != null) {
                 this.opponentThread.deliverGame(new OpponentLeft());
-                this.opponentThread.deliverGame(new Victory(opponentThread.getPlayer().getName()));
+                if (!over) {
+                    this.opponentThread.deliverGame(new Victory(opponentThread.getPlayer().getName()));
+                }
             }
 
 
@@ -208,9 +216,11 @@ public class GameThread extends Thread
             this.opponentThread.deliverGame(new Rpl_Leftgame());
 
 
-            // Challenger wins
+            // Challenger wins if somebody hasn’t won already
             this.challengerThread.deliverGame(new OpponentLeft());
-            this.challengerThread.deliverGame(new Victory(challengerThread.getPlayer().getName()));
+            if (!over) {
+                this.challengerThread.deliverGame(new Victory(challengerThread.getPlayer().getName()));
+            }
 
 
             // End run loop
@@ -219,12 +229,6 @@ public class GameThread extends Thread
 
 
         if (cmd instanceof JoinGame) {
-            if (this.opponentThread != null) {
-                // Game is already going
-                // To do: inform client
-                return;
-            }
-
             Random rand = new Random();
 
             boolean challengerToken = rand.nextInt(2) == 0;
@@ -321,6 +325,7 @@ public class GameThread extends Thread
                 // Inform both
                 challengerThread.deliverGame(v);
                 opponentThread.deliverGame(v);
+                over = true;
             } else {
                 if (game.getBoard().isSaturated()) {
                     // Draw
@@ -330,6 +335,7 @@ public class GameThread extends Thread
                     // Inform both
                     challengerThread.deliverGame(v);
                     opponentThread.deliverGame(v);
+                    over = true;
                 }
             }
             
