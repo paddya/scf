@@ -12,7 +12,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
+import scf.model.command.GamesList;
 import scf.model.command.Reconnect;
+import scf.model.command.Victory;
 import scf.parser.Parser;
 import scf.parser.exception.ParserException;
 
@@ -31,6 +33,8 @@ public class Client extends Thread
 
     private Thread handlerThread;
     private ConcurrentLinkedQueue<Command> mailbox = new ConcurrentLinkedQueue<>();
+    
+    private boolean waitingForSyncResponse = false;
 
     public static void main(String[] args)
     {
@@ -88,6 +92,7 @@ public class Client extends Thread
                     response = sendCommandAndWaitForResponse(new ClientHello(username)); 
                 }
 
+                handleCommand(response);
                 
             } while (response instanceof scf.model.command.error.Error);
 
@@ -104,10 +109,10 @@ public class Client extends Thread
                         quitFlag = true;
                     } else {
                         try {
-                            sendCommandAndWaitForResponse(Parser.parse(userCommand));
+                            Command cmd = sendCommandAndWaitForResponse(Parser.parse(userCommand));
 
-                            //String modifiedSentence = inFromServer.readLine();
-                            //System.out.println("FROM SERVER: " + modifiedSentence);
+                            handleCommand(cmd);
+                            
                         } catch (ParserException ex) {
                             System.out.println("Invalid command!");
                             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
@@ -136,13 +141,12 @@ public class Client extends Thread
             
             outToServer.writeBytes(cmd.toString() + "\n");
             
-            System.out.println("Waiting for server response...");
-            
             synchronized (this) {
+                this.waitingForSyncResponse = true;
                 this.wait();
             }
             
-            return mailbox.peek();
+            return mailbox.poll();
             
         } catch (IOException ex) {
             System.out.println("Something went wrong while trying to submit stuff to the server.");
@@ -163,11 +167,51 @@ public class Client extends Thread
         }
     }
     
-    public synchronized void handleResponse(Command cmd)
+    public synchronized void handleSyncResponse(Command cmd)
     {
         mailbox.add(cmd);
+        this.waitingForSyncResponse = false;
         notifyAll();
     }
+    
+    public synchronized void handleCommand(Command cmd)
+    {
+        System.out.println(cmd.toString());
+        if (cmd instanceof Victory) {
+            handleCommand((Victory) cmd);
+        }
+        
+        if (cmd instanceof GamesList) {
+            handleCommand((GamesList) cmd);
+        }
+    }
+    
+    public synchronized void handleCommand(Victory cmd)
+    {
+        System.out.println("You win!");
+    }
+    
+    public synchronized void handleCommand(GamesList cmd)
+    {
+        System.out.println(cmd.toString());
+    }
+    
+
+
+
+    public boolean isWaitingForSyncResponse()
+    {
+        return waitingForSyncResponse;
+    }
+
+
+
+    public void setWaitingForSyncResponse(boolean waitingForSyncResponse)
+    {
+        this.waitingForSyncResponse = waitingForSyncResponse;
+    }
+    
+    
 }
 
 

@@ -50,10 +50,15 @@ public class ResponseHandler implements Runnable
                 
                 if (line != null) {
                     try {
-                        System.out.println(line);
                         Command response = Parser.parse(line);
                         
-                        mainThread.handleResponse(response);
+                        if (mainThread.isWaitingForSyncResponse()) {
+                            mainThread.handleSyncResponse(response);
+                        } else {
+                            mainThread.handleCommand(response);
+                        }
+                        
+                        
                         
                     } catch (ParserException ex) {
                         Logger.getLogger(ResponseHandler.class.getName()).log(Level.SEVERE, null, ex);
