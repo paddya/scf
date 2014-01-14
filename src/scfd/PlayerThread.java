@@ -241,6 +241,10 @@ public class PlayerThread extends Thread
     
     
     public void handleGameCommand(Command command) {
+        if (command instanceof Victory) {
+            this.gameThread = null;
+        }
+        
         sendResponse(command);
     }
 
