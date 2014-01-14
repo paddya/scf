@@ -156,10 +156,10 @@ public class Parser
                 break;
 
             case GameStart.NAME:
-                if (message.length == 2) {
-                    cmd = new GameStart(message[1]);
+                if (message.length == 3) {
+                    cmd = new GameStart(message[1], message[2]);
                 } else {
-                    throw new ParserInvalidParamsException("Reconnect " + PARSE_ERR_PARAM_1);
+                    throw new ParserInvalidParamsException("Reconnect " + PARSE_ERR_PARAM_2);
                 }
                 
                 break;

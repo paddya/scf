@@ -1,9 +1,7 @@
 package scf.client;
 
-import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
@@ -13,10 +11,14 @@ import java.util.logging.Logger;
 import scf.model.GameListEntry;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
+import scf.model.command.GameStart;
 import scf.model.command.GamesList;
 import scf.model.command.MoveResult;
 import scf.model.command.Reconnect;
 import scf.model.command.Victory;
+import scf.model.command.response.Rpl_Discplaced;
+import scf.model.command.response.Rpl_Gamecreated;
+import scf.model.command.response.Rpl_Joinedgame;
 import scf.parser.Parser;
 import scf.parser.exception.ParserException;
 
@@ -31,8 +33,11 @@ public class Client extends Thread
 
     private Socket clientSocket;
     private DataOutputStream outToServer;
-    private BufferedReader inFromServer;
 
+    private String username = null;
+    private Boolean isChallenger = null;
+    private Boolean hasToken = null;
+    
     private Thread handlerThread;
     private ConcurrentLinkedQueue<Command> mailbox = new ConcurrentLinkedQueue<>();
     
@@ -69,8 +74,7 @@ public class Client extends Thread
             clientSocket = new Socket(ip, port);
 
             outToServer = new DataOutputStream(clientSocket.getOutputStream());
-            inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
+            
             ResponseHandler handler = new ResponseHandler(clientSocket, this);
             
             handlerThread = new Thread(handler);
@@ -82,7 +86,7 @@ public class Client extends Thread
             do {
                 System.out.print("Username: ");
 
-                String username = scanner.next();
+                username = scanner.next();
                 
                 System.out.print("Reconnect? ");
                 
@@ -102,7 +106,7 @@ public class Client extends Thread
 
             boolean quitFlag = false;
 
-            while (!quitFlag) {
+            while (!quitFlag && scanner.hasNextLine()) {
                 if (scanner.hasNext()) {
 
                     String userCommand = scanner.next();
@@ -117,6 +121,10 @@ public class Client extends Thread
                             
                         } catch (ParserException ex) {
                             System.out.println("Invalid command!");
+                            if (ex.getMessage().length() > 0) {
+                                System.out.println(ex.getMessage());
+                            }
+                            
                             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
@@ -124,7 +132,10 @@ public class Client extends Thread
                 }
 
             }
-
+            if (!quitFlag) {
+                System.out.println("Connection closed by server.");    
+            }
+            
             clientSocket.close();
         } catch (UnknownHostException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
@@ -190,6 +201,22 @@ public class Client extends Thread
         if (cmd instanceof MoveResult) {
             handleCommand((MoveResult) cmd);
         }
+        
+        if (cmd instanceof GameStart) {
+            handleCommand((GameStart) cmd);
+        }
+        
+        if (cmd instanceof Rpl_Gamecreated) {
+            isChallenger = true;
+        }
+        
+        if (cmd instanceof Rpl_Joinedgame) {
+            isChallenger = false;
+        }
+        
+        if (cmd instanceof Rpl_Discplaced) {
+            System.out.println("Waiting for opponent.");
+        }
     }
     
     public synchronized void handleCommand(Victory cmd)
@@ -206,7 +233,17 @@ public class Client extends Thread
     
     public synchronized void handleCommand(MoveResult cmd)
     {
+        if (isChallenger != null) {
+            String userSymbol = isChallenger ? "x" : "o";
+            System.out.printf("%s are yours. ", userSymbol); 
+        } else {
+            System.out.print("We have no fucking information who you are.");
+        }
+        
+        printTokenNotice();
+        
         String[][] board = cmd.getBoard();
+        hasToken = cmd.getPlayerWithToken().equals(username);
         // iterate in reverse for printing
         for (int i = board.length - 1; i >= 0; i--) {
             
@@ -214,12 +251,20 @@ public class Client extends Thread
                 System.out.print(board[i][k] + "\t");
             }
             
-            System.out.print("\n");
-            
+            System.out.print("\n");   
         }
+        
+        
     }
 
-
+    public synchronized void handleCommand(GameStart cmd)
+    {
+        hasToken = cmd.getPlayerWithToken().equals(username);
+        
+        System.out.printf("Game started. Your opponent is %s\n", cmd.getOpponentName());
+        printTokenNotice();
+        
+    }
 
     public boolean isWaitingForSyncResponse()
     {
@@ -231,6 +276,15 @@ public class Client extends Thread
     public void setWaitingForSyncResponse(boolean waitingForSyncResponse)
     {
         this.waitingForSyncResponse = waitingForSyncResponse;
+    }
+    
+    private void printTokenNotice()
+    {
+        if (hasToken) {
+            System.out.println("You have the token.");
+        } else {
+            System.out.println("Your opponent has the token.");
+        }
     }
     
     

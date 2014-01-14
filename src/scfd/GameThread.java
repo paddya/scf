@@ -245,8 +245,8 @@ public class GameThread extends Thread
 
 
             // Inform challenger and opponent
-            this.challengerThread.deliverGame(new GameStart(getPlayerWithToken()));
-            this.opponentThread.deliverGame(new GameStart(getPlayerWithToken()));
+            this.challengerThread.deliverGame(new GameStart(opponentThread.getPlayer().getName(), getPlayerWithToken()));
+            this.opponentThread.deliverGame(new GameStart(challengerThread.getPlayer().getName(), getPlayerWithToken()));
         }
 
         if (cmd instanceof PlaceDisc) {
