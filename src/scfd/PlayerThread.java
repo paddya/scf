@@ -208,6 +208,8 @@ public class PlayerThread extends Thread
         // Inform game thread about leaving of this.player
         System.out.println("LEAVE GAME FROM PORTER");
         this.gameThread.leaveGame(this);
+        this.gameThread = null;
+        this.canPlaceDisc = false;
     }
     
     
@@ -264,5 +266,15 @@ public class PlayerThread extends Thread
     public Player getPlayer()
     {
         return player;
+    }
+    
+    
+    
+    public MoveResult getLastMoveResult() {
+        if (this.gameThread == null) {
+            return null;
+        }
+        
+        return new MoveResult(this.gameThread.getGame().getStringBoard(), this.gameThread.getPlayerWithToken());
     }
 }

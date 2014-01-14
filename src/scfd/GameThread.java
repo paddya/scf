@@ -43,6 +43,14 @@ public class GameThread extends Thread
 
     public String getPlayerWithToken()
     {
+        if (this.game == null) {
+            return "";
+        }
+        
+        if (this.game.getPlayerWithToken() == null) {
+            return "";
+        }
+        
         return this.game.getPlayerWithToken().getName();
     }
 
@@ -360,5 +368,11 @@ public class GameThread extends Thread
     public PlayerThread getOpponentThread()
     {
         return opponentThread;
+    }
+    
+    
+    
+    public Game getGame() {
+        return game;
     }
 }

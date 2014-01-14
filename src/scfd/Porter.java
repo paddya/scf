@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
+import scf.model.command.MoveResult;
 import scf.model.command.Reconnect;
 import scf.model.command.error.Err_Badcommand;
 import scf.model.command.error.Err_Nicknameinuse;
@@ -94,6 +95,13 @@ public class Porter extends Thread
                                 
                                 // Set socket in player thread
                                 this.playerThread.setSocket(socket);
+                                
+                                
+                                // Get last MOVERESULT and forward to client
+                                MoveResult mr = this.playerThread.getLastMoveResult();
+                                if (mr != null) {
+                                    sendResponse(socket, mr);
+                                }
                             }
                         } else {
                             // Invalid command
