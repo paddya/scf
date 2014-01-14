@@ -193,7 +193,9 @@ public class Client extends Thread
     
     public synchronized void handleCommand(GamesList cmd)
     {
-        System.out.println(cmd.toString());
+        for (String game : cmd.getGames()) {
+            System.out.println(game);
+        }
     }
     
 

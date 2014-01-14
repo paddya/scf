@@ -1,6 +1,9 @@
 package scf.parser;
 
+import java.util.ArrayList;
 import scf.model.Board;
+import scf.model.Game;
+import scf.model.Player;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
 import scf.model.command.CreateGame;
@@ -144,7 +147,13 @@ public class Parser
 
             // Commands recievable by clients
             case GamesList.NAME:
-                cmd = new GamesList();
+                Game[] gamesList = parseGameList(message[1]);
+                GamesList tmpCmd = new GamesList();
+                
+                for (Game game : gamesList) {
+                    tmpCmd.addGame(game.getId(), game.getChallenger().getName(), (game.getOpponent() != null) ? game.getOpponent().getName() : ""); // zero fucks given
+                }
+                cmd = tmpCmd;
                 break;
 
             case GameStart.NAME:
@@ -344,6 +353,44 @@ public class Parser
 
         return parsedBoard;
     }
+    
+    // GAMESLIST [[ID,Spieler1,Spieler2],[ID2,Spieler3]]
+    private static Game[] parseGameList(String gamesList) throws ParserIllegalColumnException
+    {
+        
+        ArrayList<Game> parsedList = new ArrayList<>();
+        
+        gamesList = gamesList.replaceFirst("\\[\\[", "");
+        gamesList = gamesList.replaceFirst("\\]\\]", "");
+        // Separating rows
+        String[] games = gamesList.trim().split("\\],\\[");
+
+        String[] fields;
+        for (String game : games) {
+            fields = game.split(",");
+            
+            Game gameObj = new Game();
+            
+            if (fields.length >= 2) {
+                Player challenger = new Player();
+                challenger.setName(fields[1]);
+                gameObj.setId(fields[0]);
+                gameObj.setChallenger(challenger);
+            }
+            
+            if (fields.length == 3) {
+                Player opponent = new Player();
+                opponent.setName(fields[2]);
+            }
+            
+            parsedList.add(gameObj);
+            
+        }
+        
+        return parsedList.toArray(new Game[0]);
+       
+    }
+    
 }
 
 

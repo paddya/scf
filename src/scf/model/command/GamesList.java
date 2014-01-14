@@ -34,6 +34,11 @@ public class GamesList extends Command
             games.add("[" + gameID + "," + challengerID + "," + opponentID + "]");
         }
     }
+    
+    public ArrayList<String> getGames()
+    {
+        return games;
+    }
 
 
 
