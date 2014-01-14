@@ -28,7 +28,11 @@ public class GamesList extends Command
     
     public void addGame(String gameID, String challengerID, String opponentID) 
     {
-        games.add("[" + gameID + "," + challengerID + "," + opponentID + "]");
+        if (opponentID == null || opponentID.trim().equals("")) {
+            games.add("[" + gameID + "," + challengerID + "]");
+        } else {
+            games.add("[" + gameID + "," + challengerID + "," + opponentID + "]");
+        }
     }
 
 
