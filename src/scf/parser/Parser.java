@@ -3,6 +3,7 @@ package scf.parser;
 import java.util.ArrayList;
 import scf.model.Board;
 import scf.model.Game;
+import scf.model.GameListEntry;
 import scf.model.Player;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
@@ -147,12 +148,10 @@ public class Parser
 
             // Commands recievable by clients
             case GamesList.NAME:
-                Game[] gamesList = parseGameList(message[1]);
+                ArrayList<GameListEntry> gamesList = parseGameList(message[1]);
                 GamesList tmpCmd = new GamesList();
                 
-                for (Game game : gamesList) {
-                    tmpCmd.addGame(game.getId(), game.getChallenger().getName(), (game.getOpponent() != null) ? game.getOpponent().getName() : ""); // zero fucks given
-                }
+                tmpCmd.setGames(gamesList);
                 cmd = tmpCmd;
                 break;
 
@@ -355,39 +354,35 @@ public class Parser
     }
     
     // GAMESLIST [[ID,Spieler1,Spieler2],[ID2,Spieler3]]
-    private static Game[] parseGameList(String gamesList) throws ParserIllegalColumnException
+    private static ArrayList<GameListEntry> parseGameList(String gamesList) throws ParserIllegalColumnException
     {
         
-        ArrayList<Game> parsedList = new ArrayList<>();
+        ArrayList<GameListEntry> parsedList = new ArrayList<>();
         
         gamesList = gamesList.replaceFirst("\\[\\[", "");
-        gamesList = gamesList.replaceFirst("\\]\\]", "");
+        gamesList = gamesList.replaceFirst("(\\]\\])|(,\\])", "");
         // Separating rows
-        String[] games = gamesList.trim().split("\\],\\[");
+        String[] games = gamesList.trim().split("\\](,\\[)?");
 
         String[] fields;
         for (String game : games) {
             fields = game.split(",");
-            
-            Game gameObj = new Game();
+            GameListEntry gameObj = new GameListEntry();
             
             if (fields.length >= 2) {
-                Player challenger = new Player();
-                challenger.setName(fields[1]);
-                gameObj.setId(fields[0]);
-                gameObj.setChallenger(challenger);
+                gameObj.setGameID(fields[0]);
+                gameObj.setChallengerName(fields[1]);
             }
             
             if (fields.length == 3) {
-                Player opponent = new Player();
-                opponent.setName(fields[2]);
+                gameObj.setOpponentName(fields[2]);
             }
             
             parsedList.add(gameObj);
             
         }
         
-        return parsedList.toArray(new Game[0]);
+        return parsedList;
        
     }
     

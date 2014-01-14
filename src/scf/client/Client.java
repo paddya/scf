@@ -10,9 +10,11 @@ import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import scf.model.GameListEntry;
 import scf.model.command.ClientHello;
 import scf.model.command.Command;
 import scf.model.command.GamesList;
+import scf.model.command.MoveResult;
 import scf.model.command.Reconnect;
 import scf.model.command.Victory;
 import scf.parser.Parser;
@@ -176,13 +178,17 @@ public class Client extends Thread
     
     public synchronized void handleCommand(Command cmd)
     {
-        System.out.println(cmd.toString());
+        //System.out.println(cmd.toString());
         if (cmd instanceof Victory) {
             handleCommand((Victory) cmd);
         }
         
         if (cmd instanceof GamesList) {
             handleCommand((GamesList) cmd);
+        }
+        
+        if (cmd instanceof MoveResult) {
+            handleCommand((MoveResult) cmd);
         }
     }
     
@@ -193,11 +199,25 @@ public class Client extends Thread
     
     public synchronized void handleCommand(GamesList cmd)
     {
-        for (String game : cmd.getGames()) {
-            System.out.println(game);
+        for (GameListEntry game : cmd.getGames()) {
+            System.out.println(game.getGameID() + "\t\t" + game.getChallengerName() + "\t\t" + game.getOpponentName());
         }
     }
     
+    public synchronized void handleCommand(MoveResult cmd)
+    {
+        String[][] board = cmd.getBoard();
+        // iterate in reverse for printing
+        for (int i = board.length - 1; i >= 0; i--) {
+            
+            for (int k = 0; k < board[i].length; k++) {
+                System.out.print(board[i][k] + "\t");
+            }
+            
+            System.out.print("\n");
+            
+        }
+    }
 
 
 

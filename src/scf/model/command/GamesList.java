@@ -2,6 +2,7 @@ package scf.model.command;
 
 
 import java.util.ArrayList;
+import scf.model.GameListEntry;
 
 
 
@@ -14,7 +15,7 @@ public class GamesList extends Command
 
     public static final String NAME = "GAMESLIST";
     
-    private ArrayList<String> games;
+    private ArrayList<GameListEntry> games;
 
 
 
@@ -29,26 +30,32 @@ public class GamesList extends Command
     public void addGame(String gameID, String challengerID, String opponentID) 
     {
         if (opponentID == null || opponentID.trim().equals("")) {
-            games.add("[" + gameID + "," + challengerID + "]");
+            games.add(new GameListEntry(gameID, challengerID));
         } else {
-            games.add("[" + gameID + "," + challengerID + "," + opponentID + "]");
+            games.add(new GameListEntry(gameID, challengerID, opponentID));
         }
     }
     
-    public ArrayList<String> getGames()
+    public ArrayList<GameListEntry> getGames()
     {
         return games;
     }
 
 
 
+    public void setGames(ArrayList<GameListEntry> games)
+    {
+        this.games = games;
+    }
+    
+    
     @Override
     public String toString()
     {
         String out = "GAMESLIST [";
         
-        for (String game : this.games) {
-            out += game + ",";
+        for (GameListEntry game : this.games) {
+            out += game.toString() + ",";
         }
         
         out += "]";
