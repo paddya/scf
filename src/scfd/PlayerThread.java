@@ -5,6 +5,9 @@ import java.net.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import scf.model.Player;
 import scf.model.command.*;
+import scf.model.command.error.Err_Badcommand;
+import scf.model.command.error.Err_Gamefull;
+import scf.model.command.error.Err_Nosuchgame;
 import scf.model.command.response.Rpl_Gamecreated;
 import scf.model.command.response.Rpl_Joinedgame;
 import scf.model.command.response.Rpl_Serverhello;
@@ -140,6 +143,13 @@ public class PlayerThread extends Thread
     
     public void handlePorterCommand(CreateGame command)
     {
+        // Error: already playing a game
+        if (this.gameThread != null) {
+            sendResponse(new Err_Badcommand()); // Wrong error code, better one has yet to be specified
+            return;
+        }
+        
+        
         // Create new game thread
         this.gameThread = new GameThread(this);
         System.out.println("New game created with gameID: " + this.gameThread.getGameID());
@@ -161,10 +171,33 @@ public class PlayerThread extends Thread
     
     public void handlePorterCommand(JoinGame command)
     {
-        // Join an existing game thread
         String gid = command.getGameId();
-        this.gameThread = GameThreadMap.getInstance().get(gid);
-        this.gameThread.joinGame(this);
+        GameThread thread = GameThreadMap.getInstance().get(gid);
+        
+        
+        // Error: already playing a game
+        if (this.gameThread != null) {
+            sendResponse(new Err_Badcommand()); // Wrong error code, better one has yet to be specified
+            return;
+        }
+        
+        
+        // Error: no such game
+        if (thread == null) {
+            sendResponse(new Err_Nosuchgame());
+            return;
+        }
+        
+        
+        this.gameThread = thread;
+        
+        boolean success = this.gameThread.joinGame(this);
+        
+        if (!success) {
+            // join game failed
+            sendResponse(new Err_Gamefull());
+            return;
+        }
     }
     
     

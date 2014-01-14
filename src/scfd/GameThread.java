@@ -76,18 +76,21 @@ public class GameThread extends Thread
 
 
 
-    public synchronized void joinGame(PlayerThread opponentThread)
+    public synchronized boolean joinGame(PlayerThread opponentThread)
     {
         if (this.opponentThread != null) {
             // Game is already running
             // To do: inform client
-            return;
+            return false;
         }
+        
         this.opponentThread = opponentThread;
         this.game.setOpponent(opponentThread.getPlayer());
         this.opponentMailbox.add(new JoinGame(this.getGameID()));
 
         notifyAll();
+        
+        return true;
     }
 
 
