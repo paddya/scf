@@ -20,6 +20,7 @@ public class PlayerThread extends Thread
     private GameThread gameThread;
     private final ConcurrentLinkedQueue<Command> porterMailbox;
     private final ConcurrentLinkedQueue<Command> gameMailbox;
+    private boolean canPlaceDisc = false;
 
 
 
@@ -233,7 +234,12 @@ public class PlayerThread extends Thread
     }
     
     public void handlePorterCommand(PlaceDisc command)
-    {
+    {       
+        if (!this.canPlaceDisc) {
+            sendResponse(new Err_Badcommand());
+            return;
+        }
+        
         System.out.println("player thread PLACEDISC");
         this.gameThread.placeDisc(this, command.getColumn());
     }
@@ -243,6 +249,11 @@ public class PlayerThread extends Thread
     public void handleGameCommand(Command command) {
         if (command instanceof Victory) {
             this.gameThread = null;
+            this.canPlaceDisc = false;
+        }
+        
+        if (command instanceof GameStart) {
+            this.canPlaceDisc = true;
         }
         
         sendResponse(command);

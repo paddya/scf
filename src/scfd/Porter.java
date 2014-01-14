@@ -62,8 +62,8 @@ public class Porter extends Thread
                         Command cmd = Parser.parse(line);
                         
                         
-                        // CLIENTHELLO
                         if (cmd instanceof ClientHello) {
+                            // CLIENTHELLO
                             ClientHello clientHello = (ClientHello) cmd;
 
                             if (!PlayerThreadMap.getInstance().containsKey(clientHello.getPlayerID())) {
@@ -81,11 +81,8 @@ public class Porter extends Thread
                                 // Send error nickname in use
                                 sendResponse(socket, new Err_Nicknameinuse());
                             }
-                        }
-                        
-                        
-                        // RECONNECT
-                        if (cmd instanceof Reconnect) {
+                        } else if (cmd instanceof Reconnect) {
+                            // RECONNECT
                             // Retrieve old playerThread for this player
                             Reconnect reconnect = (Reconnect) cmd;
                             this.playerThread = PlayerThreadMap.getInstance().get(reconnect.getPlayerID());
@@ -98,6 +95,9 @@ public class Porter extends Thread
                                 // Set socket in player thread
                                 this.playerThread.setSocket(socket);
                             }
+                        } else {
+                            // Invalid command
+                            throw new ParserException();
                         }
                     } catch (ParserException e) {
                         // Bad command, close connection
