@@ -1,20 +1,11 @@
 package scfd;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.io.*;
-import java.net.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import scf.model.command.ClientHello;
-import scf.model.command.Command;
-import scf.model.command.Reconnect;
-import scf.model.command.error.Err_Nicknameinuse;
-import scf.model.command.response.Rpl_Reconnected;
-import scf.model.command.response.Rpl_Serverhello;
-import scf.parser.Parser;
-import scf.parser.exception.ParserException;
 
 
 
@@ -38,13 +29,11 @@ public class Server
         System.out.println("Server port: " + port);
         Thread serverThread;
 
-
         // Initialize listening socket and handler
         Server.pool = Executors.newCachedThreadPool();
         serverSocket = new ServerSocket(port);
         serverThread = new Thread(new Listener(serverSocket));
         serverThread.start();
-
 
         // Shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread()
@@ -58,8 +47,8 @@ public class Server
                     if (!serverSocket.isClosed()) {
                         serverSocket.close();
                     }
-                } catch (IOException e) {
-                } catch (InterruptedException e) {
+                } catch (IOException | InterruptedException e) {
+                    pool.shutdownNow();
                 }
             }
         });
@@ -103,9 +92,11 @@ class Listener implements Runnable
                 if (!serverSocket.isClosed()) {
                     serverSocket.close();
                 }
-            } catch (IOException e) {
-            } catch (InterruptedException e) {
+            } catch (IOException | InterruptedException e) {
+                Server.pool.shutdownNow();
             }
         }
     }
 }
+
+

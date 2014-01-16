@@ -1,13 +1,20 @@
 package scfd;
 
-import java.util.concurrent.*;
 import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import scf.model.Board;
 import scf.model.Game;
 import scf.model.Player;
-import scf.model.command.*;
+import scf.model.command.Command;
+import scf.model.command.GameStart;
+import scf.model.command.JoinGame;
+import scf.model.command.LeaveGame;
+import scf.model.command.MoveResult;
+import scf.model.command.OpponentLeft;
+import scf.model.command.PlaceDisc;
+import scf.model.command.Victory;
 import scf.model.command.response.Rpl_Discplaced;
 import scf.model.command.response.Rpl_Joinedgame;
 import scf.model.command.response.Rpl_Leftgame;
@@ -46,11 +53,11 @@ public class GameThread extends Thread
         if (this.game == null) {
             return "";
         }
-        
+
         if (this.game.getPlayerWithToken() == null) {
             return "";
         }
-        
+
         return this.game.getPlayerWithToken().getName();
     }
 
@@ -91,13 +98,13 @@ public class GameThread extends Thread
             // To do: inform client
             return false;
         }
-        
+
         this.opponentThread = opponentThread;
         this.game.setOpponent(opponentThread.getPlayer());
         this.opponentMailbox.add(new JoinGame(this.getGameID()));
 
         notifyAll();
-        
+
         return true;
     }
 
@@ -107,7 +114,6 @@ public class GameThread extends Thread
     {
         // Remove game from games list
         GameThreadMap.getInstance().remove(this.getGameID());
-
 
         if (leavingThread.equals(this.challengerThread)) {
             this.challengerMailbox.add(new LeaveGame());
@@ -154,7 +160,6 @@ public class GameThread extends Thread
                 handleChallengerCommand(c);
             }
 
-
             // Handle new command from opponent
             Command o = null;
             o = this.opponentMailbox.poll();
@@ -164,7 +169,6 @@ public class GameThread extends Thread
                 handleOpponentCommand(o);
             }
 
-
             // Should I stay or should I go?
             synchronized (this) {
                 if (this.die) {
@@ -172,7 +176,6 @@ public class GameThread extends Thread
                     break;
                 }
             }
-
 
             // Wait for next input on queues
             synchronized (this) {
@@ -197,7 +200,6 @@ public class GameThread extends Thread
             // Challenger leaves
             this.challengerThread.deliverGame(new Rpl_Leftgame());
 
-
             // Opponent wins
             if (this.opponentThread != null) {
                 this.opponentThread.deliverGame(new OpponentLeft());
@@ -205,7 +207,6 @@ public class GameThread extends Thread
                     this.opponentThread.deliverGame(new Victory(opponentThread.getPlayer().getName()));
                 }
             }
-
 
             // End run loop
             this.die = true;
@@ -226,18 +227,15 @@ public class GameThread extends Thread
             // Opponent leaves
             this.opponentThread.deliverGame(new Rpl_Leftgame());
 
-
             // Challenger wins if somebody hasn’t won already
             this.challengerThread.deliverGame(new OpponentLeft());
             if (!over) {
                 this.challengerThread.deliverGame(new Victory(challengerThread.getPlayer().getName()));
             }
 
-
             // End run loop
             this.die = true;
         }
-
 
         if (cmd instanceof JoinGame) {
             Random rand = new Random();
@@ -247,10 +245,8 @@ public class GameThread extends Thread
             this.game.getChallenger().setToken(challengerToken);
             this.game.getOpponent().setToken(!challengerToken);
 
-
             // Opponent joins
             this.opponentThread.deliverGame(new Rpl_Joinedgame());
-
 
             // Inform challenger and opponent
             this.challengerThread.deliverGame(new GameStart(opponentThread.getPlayer().getName(), getPlayerWithToken()));
@@ -315,24 +311,22 @@ public class GameThread extends Thread
 
             challengerThread.deliverGame(new MoveResult(game.getStringBoard(), getPlayerWithToken()));
             opponentThread.deliverGame(new MoveResult(game.getStringBoard(), getPlayerWithToken()));
-            
-            
+
             // Check for victory
             Player winner = game.getWinner();
             if (winner != null) {
                 Victory v = null;
-                
+
                 if (winner == challengerThread.getPlayer()) {
                     // Challenger won
                     v = new Victory(challengerThread.getPlayer().getName());
                 }
-                
+
                 if (winner == opponentThread.getPlayer()) {
                     // Opponent won
                     v = new Victory(opponentThread.getPlayer().getName());
                 }
-                
-                
+
                 // Inform both
                 challengerThread.deliverGame(v);
                 opponentThread.deliverGame(v);
@@ -341,15 +335,13 @@ public class GameThread extends Thread
                 if (game.getBoard().isSaturated()) {
                     // Draw
                     Victory v = new Victory("");
-                    
-                    
+
                     // Inform both
                     challengerThread.deliverGame(v);
                     opponentThread.deliverGame(v);
                     over = true;
                 }
             }
-            
 
             challengerMove = null;
             opponentMove = null;
@@ -369,10 +361,13 @@ public class GameThread extends Thread
     {
         return opponentThread;
     }
-    
-    
-    
-    public Game getGame() {
+
+
+
+    public Game getGame()
+    {
         return game;
     }
 }
+
+
